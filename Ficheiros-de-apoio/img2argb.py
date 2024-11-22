@@ -3,7 +3,7 @@
 
 import sys
 from PIL import Image
-from os import getcwd, listdir
+from os import getcwd, listdir, path
 
 
 def convert_pixel_to_argb(pixel):
@@ -43,14 +43,16 @@ def convert_image_to_text(image_path, output_path):
                 file.write("\n")
 
 
+
+
 if __name__ == "__main__":
     # Verifica o número correto de argumentos
     #if len(sys.argv) != 2:
     #    print("Uso: python img2argb.py <imagem>")
     #    sys.exit(1)
 
-    path_pixelarts_cena1 = "../assembly-showcase/Cena 1/pixel art imgs"
-    path_pixelarts_cena2 = "../assembly-showcase/Cena 2/pixel art imgs"
+    path_pixelarts_cena1 = "Cena-1\pixel-art-imgs"
+    path_pixelarts_cena2 = "Cena-2\pixel-art-imgs"
 
     # Listar todos os arquivos na pasta atual que terminam com .png
     arquivos_png_cena1 = [f for f in listdir(path_pixelarts_cena1) if f.endswith('.png')]
@@ -58,7 +60,7 @@ if __name__ == "__main__":
 
     # Exibir os nomes dos arquivos encontrados
     for arquivo in arquivos_png_cena1:
-        input_image_path = arquivo
+        input_image_path = path.join("Cena-1", "pixel-art-imgs", arquivo)
 
         # Converte a imagem em texto e salva num ficheiro
         convert_image_to_text(input_image_path, f"{input_image_path[:-4]}-PEPE.txt")
