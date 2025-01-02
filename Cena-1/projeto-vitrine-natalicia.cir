@@ -12,7 +12,7 @@
   "component resize factor" : 1.0,
   "window" : {
     "X absolute" : -8,
-    "Y absolute" : -1088,
+    "Y absolute" : -8,
     "X relative" : -8,
     "Y relative" : -8,
     "width" : 1936,
@@ -605,7 +605,11 @@
     "moduleDelay" : 5,
     "positionX" : 67,
     "positionY" : 46,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 0,
+    "simGuiYRelative" : 0,
+    "simGuiWidth" : 794,
+    "simGuiHeight" : 894,
     "clockPeriod" : 200,
     "startAutomatically" : false,
     "simulationMaster" : true,
@@ -634,7 +638,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "lab3.asm",
+    "programFilePathName" : "desenha-obj.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1354,19 +1358,15 @@
     "moduleDelay" : 5,
     "positionX" : 629,
     "positionY" : 229,
-    "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 933,
-    "simGuiYRelative" : 187,
-    "simGuiWidth" : 1024,
-    "simGuiHeight" : 512,
+    "simGuiVisibleInSimulation" : false,
     "columnAddressNBits" : 6,
     "lineAddressNBits" : 5,
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 65280,
-    "image paths" : [ "../Cena-1/background-img/black bg.png" ],
+    "image paths" : [ "background-img/black bg.png" ],
     "sounds/videos settings" : [ {
-      "filePathName" : "disparo.wav",
+      "filePathName" : "audio/christmas-spirit.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
@@ -1380,7 +1380,7 @@
       "nWordParts" : 2,
       "endianness" : "Big-Endian",
       "addressNBits" : 12,
-      "numberOfPixelScreens" : 1
+      "numberOfPixelScreens" : 6
     },
     "addressable control" : {
       "className" : "ModuleExtensionMediaCenter",
