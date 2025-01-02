@@ -19,8 +19,10 @@ DEFINE_PIXEL			EQU COMANDOS + 12H		; endereço do comando para escrever um pixel
 APAGA_AVISO				EQU COMANDOS + 40H		; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO	EQU COMANDOS + 42H		; endereço do comando para selecionar uma imagem de fundo
-REPRODUZ_SOM			EQU COMANDOS + 5AH		; endereço do comando para reproduzir midia
-PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para reproduzir midia
+INICIA_SOM			EQU COMANDOS + 5AH		; endereço do comando para reproduzir som
+PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
+PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
+CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
 
 LINHA       EQU  16        	; linha do objeto (a meio do ecrã)
 COLUNA		EQU  30        	; coluna do objeto (a meio do ecrã)
@@ -47,6 +49,7 @@ inicio:
     MOV [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
     MOV [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV [INICIA_SOM], R1	; reproduz som
      
 posição_objeto:
     MOV R1, LINHA			; linha do objeto
