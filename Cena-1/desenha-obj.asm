@@ -276,6 +276,7 @@ próximo_objeto:
 	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
 stop_som:
+	MOV R1, 0				; nº do som a parar
 	MOV [PARA_SOM], R1		; para som
 
 fim:
