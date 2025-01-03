@@ -28,7 +28,7 @@ PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
 PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
 CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
 
-LINHA       			EQU 0        			; linha do objeto (posição)
+LINHA       			EQU 1        			; linha do objeto (posição)
 COLUNA					EQU 0        			; coluna do objeto (posição)
 
 LARGURA       			EQU 64        			; largura dos objetos
@@ -360,9 +360,9 @@ desenha_pixels:       		; desenha os pixels do objeto a partir da tabela
 	MOV R5, LARGURA			; reinicia a largura do objeto
 	SUB R6, 1				; menos uma linha para tratar
 	JNZ desenha_linhas		; continua até percorrer todas as linhas
+	MOV [PARA_SOM], R1		; para som
 	SUB R7, 1				; menos um ecrã para desenhar
 	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for negativo (0-7)
-	MOV [PARA_SOM], R1		; para som
 
 fim:
     JMP fim                 ; termina programa
