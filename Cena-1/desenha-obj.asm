@@ -386,7 +386,7 @@ anima_neve:
 verifica_flag:
 	MOV R2, [animação_neve]
 	CMP R2, 1
-	JN termina_animação
+	JN verifica_flag
 
 animação:
 	MOV R1, 0
@@ -403,7 +403,7 @@ animação:
 	CALL atraso
 	JMP verifica_flag
 
-termina_animação:
+fim:
 	POP R11
 	POP R2
 	POP R1
