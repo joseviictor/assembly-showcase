@@ -34,7 +34,19 @@ NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 ; #######################################################################
 ; # ZONA DE DADOS 
 ; #######################################################################
-	PLACE		0100H				
+	PLACE		0100H
+
+linha:
+	WORD 0
+
+coluna:
+	WORD 0
+
+largura:
+	WORD 0
+
+altura:
+	WORD 0			
 
 giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  6, 8, 11, 15 		; linha,coluna,largura,altura
@@ -214,25 +226,26 @@ inicio:
      
 posição_objeto:
     MOV R1, [R4]			; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV R8, R1				; guarda LINHA do objeto
+	MOV [linha], R1			; guarda LINHA do objeto
 	ADD R4, 2				; avança para a 2ª palavra da tabela que define o objeto
 	
 	MOV R2, [R4]			; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	MOV R9, R2				; guarda coluna do objeto
+	MOV [coluna], R2		; guarda coluna do objeto
 	ADD R4, 2				; avança para a 3ª palavra da tabela que define o objeto
 	
 	MOV R5, [R4]			; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV R10, R5				; guarda largura
+	MOV [largura], R5		; guarda largura
 	ADD R4, 2				; avança para a 4ª palavra da tabela que define o objeto
 	
 	MOV R6, [R4]			; obtém a altura do objeto
+	MOV [altura], R6		; guarda a altura do objeto
 	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
 
 desenha_linhas:       		; desenha cada linha do objeto
-	MOV R2, R9				; reinicia a coluna para cada linha
+	MOV R2, [coluna]		; reinicia a coluna para cada linha
 
 desenha_pixels:       		; desenha os pixels do objeto a partir da tabela
 	MOV	R3, [R4]			; obtém a cor do próximo pixel do objeto
@@ -245,22 +258,12 @@ desenha_pixels:       		; desenha os pixels do objeto a partir da tabela
     JNZ desenha_pixels      ; continua até percorrer toda a largura do objeto
 
 	ADD R1, 1				; próxima linha
-	MOV R5, R10				; reinicia a largura do objeto
+	MOV R5, [largura]		; reinicia a largura do objeto
 	SUB R6, 1				; menos uma linha para tratar
 	JNZ desenha_linhas		; continua até percorrer todas as linhas
 	
 	SUB R7, 1				; menos um ecrã para desenhar
 	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
-
-anima_neve:
-	MOV R1, 6
-	MOV R2, 7
-	MOV [SELECIONA_ECRA], R1
-	MOV [ESCONDE_ECRA], R1	;
-	MOV [ESCONDE_ECRA], R2	;
-	MOV [MOSTRA_ECRA], R1	;
-	MOV [MOSTRA_ECRA], R2	;
-	JMP anima_neve
 
 fim:
 	MOV [PARA_SOM], R1		; para som
