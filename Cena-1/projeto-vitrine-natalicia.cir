@@ -607,7 +607,7 @@
     "positionY" : 46,
     "simGuiVisibleInSimulation" : false,
     "clockPeriod" : 200,
-    "startAutomatically" : true,
+    "startAutomatically" : false,
     "simulationMaster" : true,
     "clockIsExternal" : false,
     "clockInPin" : {
@@ -1363,7 +1363,7 @@
     "image paths" : [ "background-img/black bg.png" ],
     "sounds/videos settings" : [ {
       "filePathName" : "audio/christmas-spirit.mp3",
-      "relative sound volume" : 0.0,
+      "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
