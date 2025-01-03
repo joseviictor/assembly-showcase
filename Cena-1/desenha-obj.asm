@@ -32,6 +32,14 @@ PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
 PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
 CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
 
+TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
+TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
+LINHA_TECLADO			EQU	8					; linha a testar (4ª linha, 1000b)
+MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+TECLA_C					EQU	1					; tecla na primeira coluna do teclado (tecla C)
+TECLA_D					EQU 2					; tecla na segunda coluna do teclado (tecla D)
+TECLA_E					EQU 4					; tecla na terceira coluna do teclado (tecla E)
+
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
 ; #######################################################################
@@ -39,17 +47,38 @@ NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 ; #######################################################################
 	PLACE		0100H
 
+; Reserva do espaço para as pilhas dos processos
+	STACK 100H			; espaço reservado para a pilha do processo "programa principal"
+SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve ser inicializado
+							
+	STACK 100H			; espaço reservado para a pilha do processo "teclado"
+SP_inicial_teclado:		; este é o endereço com que o SP deste processo deve ser inicializado
+							
+	STACK 100H			; espaço reservado para a pilha do processo "objeto"
+SP_inicial_objeto:		; este é o endereço com que o SP deste processo deve ser inicializado
+							
+tecla_carregada:
+	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
+						; uma vez por cada tecla carregada
+							
+tecla_continuo:
+	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
+						; enquanto a tecla estiver carregada
+							
+evento_int_0:
+	LOCK 0				; LOCK para a rotina de interrupção comunicar ao processo objeto que a interrupção ocorreu
+
 linha:
-	WORD 0
+	WORD 0				; espaço reservado para guardar a linha do objeto
 
 coluna:
-	WORD 0
+	WORD 0				; espaço reservado para guardar a coluna do objeto
 
 largura:
-	WORD 0
+	WORD 0				; espaço reservado para guardar a largura do objeto
 
 altura:
-	WORD 0			
+	WORD 0				; espaço reservado para guardar a altura do objeto
 
 giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  6, 8, 11, 15 		; linha,coluna,largura,altura
@@ -219,6 +248,8 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 ; *********************************************************************************
 	PLACE   0				; o código tem de começar em 0000H
 inicio:
+	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
+
     MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
     MOV [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
@@ -229,6 +260,10 @@ inicio:
 	MOV [VOLUME_SOM], R1	; define volume som como 100%
 	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
+
+	; cria processos. O CALL não invoca a rotina, apenas cria um processo executável
+	;CALL	teclado			; cria o processo teclado
+	;CALL	objeto			; cria o processo objeto
      
 posição_objeto:
     MOV R1, [R4]			; obtém a linha do objeto, será decrementada para controlo de fluxo
@@ -247,6 +282,31 @@ posição_objeto:
 	MOV [altura], R6		; guarda a altura do objeto
 	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
+	CALL desenha_objeto
+
+stop_som:
+	MOV R1, 0				; nº do som a parar
+	MOV [PARA_SOM], R1		; para som
+
+fim:
+    JMP fim                 ; termina programa
+
+; **********************************************************************
+; DESENHA_OBJETO - Desenha um objeto na linha e coluna indicadas
+;			    com a forma e cor definidas na tabela indicada.
+; Argumentos:   R1 - linha
+;               R2 - coluna
+;               R4 - tabela que define o objeto
+;
+; **********************************************************************
+desenha_objeto:
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
+	PUSH R7
+
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
 
@@ -255,9 +315,7 @@ reinicia_coluna:       		; desenha pixel na linha e coluna do objeto a partir da
 
 desenha_pixel:
 	MOV	R3, [R4]			; obtém a cor do pixel do objeto
-	MOV [DEFINE_LINHA], R1	; seleciona a linha
-	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
-	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+	CALL escreve_pixel		; escreve cada pixel do objeto
 
 próxima_coluna:
 	ADD	R4, 2				; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
@@ -275,9 +333,23 @@ próximo_objeto:
 	SUB R7, 1				; menos um ecrã para desenhar
 	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
-stop_som:
-	MOV R1, 0				; nº do som a parar
-	MOV [PARA_SOM], R1		; para som
+	POP	R7
+	POP	R6
+	POP	R5
+	POP	R4
+	POP	R3
+	POP	R2
+	RET
 
-fim:
-    JMP fim                 ; termina programa
+; **********************************************************************
+; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
+; Argumentos:   R1 - linha
+;               R2 - coluna
+;               R3 - cor do pixel (em formato ARGB de 16 bits)
+;
+; **********************************************************************
+escreve_pixel:
+	MOV [DEFINE_LINHA], R1	; seleciona a linha
+	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
+	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+	RET
