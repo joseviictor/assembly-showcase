@@ -284,6 +284,21 @@ posição_objeto:
 
 	CALL desenha_objeto
 
+anima_neve:
+	MOV R1, 0
+	MOV [ESCONDE_ECRA], R1
+	MOV R1, 1
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	MOV R1, 1
+	MOV [ESCONDE_ECRA], R0
+	MOV R1, 0
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	JMP anima_neve
+
 stop_som:
 	MOV R1, 0				; nº do som a parar
 	MOV [PARA_SOM], R1		; para som
@@ -352,4 +367,17 @@ escreve_pixel:
 	MOV [DEFINE_LINHA], R1	; seleciona a linha
 	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
 	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+	RET
+
+; **********************************************************************
+; ATRASO - Executa um ciclo para implementar um atraso.
+; Argumentos:   R11 - valor que define o atraso
+;
+; **********************************************************************
+atraso:
+	PUSH R11
+ciclo_atraso:
+	SUB	R11, 1
+	JNZ	ciclo_atraso
+	POP	R11
 	RET
