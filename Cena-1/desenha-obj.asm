@@ -80,6 +80,9 @@ largura:
 altura:
 	WORD 0				; espaço reservado para guardar a altura do objeto
 
+animação_neve:
+	WORD 1
+
 giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  6, 8, 11, 15 		; linha,coluna,largura,altura
 	WORD  0000H,0FC22H,0FC22H, 0000H, 0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H, 0000H
@@ -283,21 +286,7 @@ posição_objeto:
 	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 	CALL desenha_objeto
-
-anima_neve:
-	MOV R1, 0
-	MOV [ESCONDE_ECRA], R1
-	MOV R1, 1
-	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
-	CALL atraso
-	MOV R1, 1
-	MOV [ESCONDE_ECRA], R0
-	MOV R1, 0
-	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
-	CALL atraso
-	JMP anima_neve
+	CALL anima_neve
 
 stop_som:
 	MOV R1, 0				; nº do som a parar
@@ -381,3 +370,43 @@ ciclo_atraso:
 	JNZ	ciclo_atraso
 	POP	R11
 	RET
+
+; **********************************************************************
+; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre objetos
+; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
+;				R2 - flag da animação
+;				R11 - Valor do atraso
+;
+; **********************************************************************
+anima_neve:
+	PUSH R1
+	PUSH R2
+	PUSH R11
+
+verifica_flag:
+	MOV R2, [animação_neve]
+	CMP R2, 1
+	JN termina_animação
+
+animação:
+	MOV R1, 0
+	MOV [ESCONDE_ECRA], R1
+	MOV R1, 1
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	MOV R1, 1
+	MOV [ESCONDE_ECRA], R0
+	MOV R1, 0
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	JMP verifica_flag
+
+termina_animação:
+	POP R11
+	POP R2
+	POP R1
+	RET
+
+
