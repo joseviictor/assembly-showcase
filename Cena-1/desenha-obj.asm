@@ -23,6 +23,7 @@ DEFINE_PIXEL			EQU COMANDOS + 12H		; endereço do comando para escrever um pixel
 APAGA_AVISO				EQU COMANDOS + 40H		; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma imagem de fundo
+REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
 INICIA_SOM				EQU COMANDOS + 5AH		; endereço do comando para reproduzir som
 PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
 PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
@@ -249,8 +250,18 @@ desenha_pixels:       		; desenha os pixels do objeto a partir da tabela
 	JNZ desenha_linhas		; continua até percorrer todas as linhas
 	
 	SUB R7, 1				; menos um ecrã para desenhar
-	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for negativo (0-7)
-	MOV [PARA_SOM], R1		; para som
+	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
+
+anima_neve:
+	MOV R1, 6
+	MOV R2, 7
+	MOV [SELECIONA_ECRA], R1
+	MOV [ESCONDE_ECRA], R1	;
+	MOV [ESCONDE_ECRA], R2	;
+	MOV [MOSTRA_ECRA], R1	;
+	MOV [MOSTRA_ECRA], R2	;
+	JMP anima_neve
 
 fim:
+	MOV [PARA_SOM], R1		; para som
     JMP fim                 ; termina programa
