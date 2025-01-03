@@ -24,7 +24,10 @@ APAGA_AVISO				EQU COMANDOS + 40H		; endereço do comando para apagar o aviso de
 APAGA_ECRÃ				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma imagem de fundo
 REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
-INICIA_SOM				EQU COMANDOS + 5AH		; endereço do comando para reproduzir som
+
+SELECTIONA_MIDIA		EQU COMANDOS + 48H		; seleciona arquivo de midia (GIF, som ou video), para ser usado nos comandos subsequentes
+INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som continuamente até ser parado
+VOLUME_SOM				EQU COMANDOS + 4AH		; define volume do som (0-100%)
 PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
 PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
 CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
@@ -220,7 +223,10 @@ inicio:
     MOV [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
     MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
+	MOV [SELECTIONA_MIDIA], R1 ; seleciona ficheiro de mídia 0 - som.
 	MOV [INICIA_SOM], R1	; reproduz som
+	MOV R1, 100				; define valor a ser usado como volume do som.
+	MOV [VOLUME_SOM], R1	; define volume som como 100%
 	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
      
@@ -244,27 +250,33 @@ posição_objeto:
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
 
-desenha_linhas:       		; desenha cada linha do objeto
+reinicia_coluna:       		; desenha pixel na linha e coluna do objeto a partir da tabela
 	MOV R2, [coluna]		; reinicia a coluna para cada linha
 
-desenha_pixels:       		; desenha os pixels do objeto a partir da tabela
-	MOV	R3, [R4]			; obtém a cor do próximo pixel do objeto
+desenha_pixel:
+	MOV	R3, [R4]			; obtém a cor do pixel do objeto
 	MOV [DEFINE_LINHA], R1	; seleciona a linha
 	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
 	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+
+próxima_coluna:
 	ADD	R4, 2				; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
     ADD R2, 1               ; próxima coluna
     SUB R5, 1				; menos uma coluna para tratar
-    JNZ desenha_pixels      ; continua até percorrer toda a largura do objeto
+    JNZ desenha_pixel      	; continua até percorrer toda a largura do objeto
 
+próxima_linha:
 	ADD R1, 1				; próxima linha
 	MOV R5, [largura]		; reinicia a largura do objeto
 	SUB R6, 1				; menos uma linha para tratar
-	JNZ desenha_linhas		; continua até percorrer todas as linhas
+	JNZ reinicia_coluna		; continua até percorrer todas as linhas
 	
+próximo_objeto:
 	SUB R7, 1				; menos um ecrã para desenhar
 	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
-fim:
+stop_som:
 	MOV [PARA_SOM], R1		; para som
+
+fim:
     JMP fim                 ; termina programa
