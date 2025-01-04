@@ -595,32 +595,51 @@ teclado_animacao:
 	CMP R0, 0
 	JZ sai_rotina_teclado
 	CMP R0, 1
-	JZ tecla_premida
+	JZ tecla_premida_C
 	CMP R0, 2
-	JZ tecla_premida
+	JZ tecla_premida_D
 	CMP R0, 4
-	JZ tecla_premida
+	JZ tecla_premida_E
 	MOV R1, 8
 	CMP R0, R1
-	JZ tecla_premida
+	JZ tecla_premida_F
 
-	tecla_premida:
-	MOV R0, [animacao_neve]
-	CMP R0, 0
-	JZ ativa_animacao
-	CMP R0, 1
-	JZ desativa_animacao
+tecla_premida_C:
+	JZ ativa_animacao_neve
+
+tecla_premida_D:
+	JZ desativa_animacao_neve
+
+tecla_premida_E:
+	JZ ativa_animacao_arvore
+
+tecla_premida_F:
+	JZ desativa_animacao_arvore
 	
-	ativa_animacao:
+ativa_animacao_neve:
 	MOV R1, 1
 	MOV [animacao_neve], R1
 	JMP sai_rotina_teclado
 
-	desativa_animacao:
+desativa_animacao_neve:
 	MOV R1, 0
 	MOV [animacao_neve], R1
 	MOV [ESCONDE_ECRA], R1
 	MOV R1, 1
+	MOV [ESCONDE_ECRA], R1
+	JMP sai_rotina_teclado
+	
+ativa_animacao_arvore:
+	MOV R1, 1
+	MOV [animacao_arvore], R1
+	JMP sai_rotina_teclado
+
+desativa_animacao_arvore:
+	MOV R1, 0
+	MOV [animacao_arvore], R1
+	MOV R1, 3
+	MOV [ESCONDE_ECRA], R1
+	MOV R1, 4
 	MOV [ESCONDE_ECRA], R1
 	JMP sai_rotina_teclado
 
