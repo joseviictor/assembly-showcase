@@ -38,14 +38,15 @@ LINHA_TECLADO			EQU	8					; linha a testar (4ª linha, 1000b)
 MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_C					EQU	1					; tecla na primeira coluna do teclado (tecla C)
 TECLA_D					EQU 2					; tecla na segunda coluna do teclado (tecla D)
-TECLA_E					EQU 4					; tecla na terceira coluna do teclado (tecla E)
+TECLA_E					EQU 3					; tecla na terceira coluna do teclado (tecla E)
+TECLA_F					EQU 4					; tecla na terceira coluna do teclado (tecla F)
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
 ; #######################################################################
 ; # ZONA DE DADOS 
 ; #######################################################################
-	PLACE		0100H
+	PLACE		0300H
 
 ; Reserva do espaço para as pilhas dos processos
 	STACK 100H			; espaço reservado para a pilha do processo "programa principal"
@@ -55,7 +56,10 @@ SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve se
 SP_inicial_teclado:		; este é o endereço com que o SP deste processo deve ser inicializado
 							
 	STACK 100H			; espaço reservado para a pilha do processo "objeto"
-SP_inicial_objeto:		; este é o endereço com que o SP deste processo deve ser inicializado
+SP_inicial_arvore:		; este é o endereço com que o SP deste processo deve ser inicializado
+
+	STACK 100H			; espaço reservado para a pilha do processo "objeto"
+SP_inicial_neve:		; este é o endereço com que o SP deste processo deve ser inicializado
 							
 tecla_carregada:
 	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
@@ -80,11 +84,14 @@ largura:
 altura:
 	WORD 0				; espaço reservado para guardar a altura do objeto
 
-animação_neve:
+animação_neve:			; flag para determinar a execução da animação da neve
 	WORD 1
 
-giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
-	WORD  6, 8, 11, 15 		; linha,coluna,largura,altura
+animação_árvore:		; flag para determinar a execução da animação da árvore
+	WORD 1
+
+giftbox:				; tabela que define o objeto giftbox (cor, largura, pixels)
+	WORD  6, 8, 11, 15 	; linha,coluna,largura,altura
 	WORD  0000H,0FC22H,0FC22H, 0000H, 0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H, 0000H
 	WORD  0FC22H,0FE12H,0FE12H,0FE12H, 0000H, 0000H, 0000H,0FC22H,0FE12H,0FE12H,0FC22H
 	WORD  0FC22H,0FE12H,0FE12H,0FE12H,0FC22H,0FC22H,0FC22H,0FE12H,0FE12H,0FE12H,0FC22H
@@ -101,8 +108,8 @@ giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  0000H,0F353H,0F462H,0F462H,0FC22H,0FE12H,0FC22H,0F462H,0F462H,0F353H, 0000H
 	WORD  0000H,0F353H,0F353H,0F353H,0FC22H,0FE12H,0FC22H,0F353H,0F353H,0F353H, 0000H
 	
-pai_natal:					; tabela que define o objeto pai natal (cor, largura, pixels)
-	WORD  4, 26, 13, 17 	; linha,coluna,largura,altura
+pai_natal:				; tabela que define o objeto pai natal (cor, largura, pixels)
+	WORD  4, 26, 13, 17 ; linha,coluna,largura,altura
 	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H,0FBBBH,0FFFFH, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H,0FC22H,0FFFFH,0FFFFH, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H,0FE12H,0FE12H,0FE12H,0FC22H, 0000H, 0000H, 0000H
@@ -168,8 +175,8 @@ luzes2:					; tabela que define o objeto luzes da árvore 2 (cor, largura, pixel
 	WORD  0FAE1H, 0000H, 0000H, 0000H, 0000H,0FE12H, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H,0F903H, 0000H, 0000H, 0000H,0FFC0H
 
-merry_xmas:					; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
-	WORD  24, 9, 49, 5 		; linha,coluna,largura,altura
+merry_xmas:				; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
+	WORD  24, 9, 49, 5 	; linha,coluna,largura,altura
 	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH
 	WORD  0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H
 	WORD  0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H
@@ -285,8 +292,9 @@ posição_objeto:
 	MOV [altura], R6		; guarda a altura do objeto
 	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
-	CALL desenha_objeto
+	CALL desenha_objetos
 	CALL anima_neve
+	CALL anima_arvore
 
 stop_som:
 	MOV R1, 0				; nº do som a parar
@@ -296,14 +304,14 @@ fim:
     JMP fim                 ; termina programa
 
 ; **********************************************************************
-; DESENHA_OBJETO - Desenha um objeto na linha e coluna indicadas
+; DESENHA_OBJETOS - Desenha um objeto na linha e coluna indicadas
 ;			    com a forma e cor definidas na tabela indicada.
 ; Argumentos:   R1 - linha
 ;               R2 - coluna
 ;               R4 - tabela que define o objeto
 ;
 ; **********************************************************************
-desenha_objeto:
+desenha_objetos:
 	PUSH R2
 	PUSH R3
 	PUSH R4
@@ -378,35 +386,74 @@ ciclo_atraso:
 ;				R11 - Valor do atraso
 ;
 ; **********************************************************************
+;PROCESS SP_inicial_neve
 anima_neve:
 	PUSH R1
 	PUSH R2
 	PUSH R11
 
-verifica_flag:
+verifica_flag_neve:
 	MOV R2, [animação_neve]
 	CMP R2, 1
-	JN verifica_flag
+	JN verifica_flag_neve
 
 animação:
 	MOV R1, 0
 	MOV [ESCONDE_ECRA], R1
 	MOV R1, 1
 	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
+	MOV R11, 7500
 	CALL atraso
 	MOV R1, 1
-	MOV [ESCONDE_ECRA], R0
+	MOV [ESCONDE_ECRA], R1
 	MOV R1, 0
 	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
+	MOV R11, 7500
 	CALL atraso
-	JMP verifica_flag
+	JMP verifica_flag_neve
 
-fim:
+fim_rotina_neve:
 	POP R11
 	POP R2
 	POP R1
 	RET
 
+; **********************************************************************
+; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre objetos de luzes de natal
+; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
+;				R2 - flag da animação
+;				R11 - Valor do atraso
+;
+; **********************************************************************
+;PROCESS SP_inicial_arvore
+anima_arvore:
+	PUSH R1
+	PUSH R2
+	PUSH R11
+
+verifica_flag_arvore:
+	MOV R2, [animação_árvore]
+	CMP R2, 1
+	JN verifica_flag_arvore
+
+animação_arvore:
+	MOV R1, 3
+	MOV [ESCONDE_ECRA], R1
+	MOV R1, 4
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	MOV R1, 4
+	MOV [ESCONDE_ECRA], R0
+	MOV R1, 3
+	MOV [MOSTRA_ECRA], R1
+	MOV R11, 5000
+	CALL atraso
+	JMP verifica_flag_arvore
+
+termina_animação_arvore:
+	POP R11
+	POP R2
+	POP R1
+	RET
 
