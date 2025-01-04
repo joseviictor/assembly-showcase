@@ -43,7 +43,7 @@ TECLA_F					EQU 4					; tecla na terceira coluna do teclado (tecla F)
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
-DELAY					EQU 0200H				; valor usado para implementar um atraso temporal (0F00H = 3840)
+DELAY					EQU 0200H				; valor usado para implementar um atraso temporal (0200H = 512)
 
 ; #######################################################################
 ; # ZONA DE DADOS 
@@ -74,6 +74,9 @@ tecla_continuo:
 evento_int_0:
 	LOCK 0				; LOCK para a rotina de interrupção comunicar ao processo objeto que a interrupção ocorreu
 
+; ##########################################################################################
+; # variáveis para guardar a posição do objeto
+; ##########################################################################################
 linha:
 	WORD 0				; espaço reservado para guardar a linha do objeto
 
@@ -86,20 +89,23 @@ largura:
 altura:
 	WORD 0				; espaço reservado para guardar a altura do objeto
 
-animacao_neve:			; flag para determinar a execução da animação da neve
+; ##########################################################################################
+; # variáveis para controlo de animações
+; ##########################################################################################
+animacao_neve:			; flag para determinar se é para executar animação da neve
 	WORD 1
 
-neve_em_exibicao:		; flag para determinar a exibição da neve
-	WORD 0
+animacao_arvore:		; flag para determinar se é para executar animação da árvore
+	WORD 1
 
-animacao_arvore:		; flag para determinar a execução da animação da árvore
-	WORD 0
+flag_neve_exibida:
+	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0 - nenhum, 1 ou 2)
+
+flag_arvore_exibida:
+	WORD 0				; flag para determinar qual objeto das luzes está sendo exibido (0 - nenhum, 1 ou 2)
 
 contador_atraso:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
-
-flag_neve_exibida:
-	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0, 1 ou 2)
 
 giftbox:				; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  6, 8, 11, 15 	; linha,coluna,largura,altura
@@ -335,6 +341,7 @@ fim:
 ; Argumentos:   R1 - linha
 ;               R2 - coluna
 ;               R4 - tabela que define o objeto
+;               R7 - número do ecrã a desenhar
 ;
 ; **********************************************************************
 desenha_objetos:
@@ -438,9 +445,9 @@ sai_atraso:
 	RET
 
 ; **********************************************************************
-; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre objetos
-; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
-;				R2 - flag da animação
+; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre 
+;			   objetos, de forma não bloqueante
+; Argumentos:   Nenhum
 ;
 ; **********************************************************************
 ;PROCESS SP_inicial_neve
@@ -448,7 +455,7 @@ anima_neve:
 	PUSH R1
 	PUSH R2
 
-verifica_atraso:
+verifica_atraso_neve:
 	CALL atraso
 	CMP R1, 0
 	JNZ fim_rotina_neve
@@ -486,32 +493,49 @@ fim_rotina_neve:
 	RET
 
 ; **********************************************************************
-; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre objetos de luzes de natal
-; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
-;				R2 - flag da animação
-;
+; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre 
+; 				 objetos de luzes de natal de forma não bloqueante
+; Argumentos:  Nenhum
+;				
 ; **********************************************************************
 ;PROCESS SP_inicial_arvore
 anima_arvore:
 	PUSH R1
 	PUSH R2
 
-animação_arvore:
+verifica_atraso_arvore:
+	CALL atraso
+	CMP R1, 0
+	JNZ fim_rotina_arvore
+
+verifica_flag_arvore_exibida:
+	MOV R2, [flag_arvore_exibida]
+	CMP R2, 0
+	JZ mostra_arvore_1
+	CMP R2, 1
+	JZ mostra_arvore_2
+	CMP R2, 2
+	JZ mostra_arvore_1
+
+mostra_arvore_1:
+	MOV R1, 3
+	MOV [MOSTRA_ECRA], R1
+	MOV R1, 4
+	MOV [ESCONDE_ECRA], R1
+	MOV R2, 1
+	MOV [flag_arvore_exibida], R2
+	JMP fim_rotina_arvore
+
+mostra_arvore_2:
 	MOV R1, 3
 	MOV [ESCONDE_ECRA], R1
 	MOV R1, 4
 	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
-	CALL atraso
-	MOV R1, 4
-	MOV [ESCONDE_ECRA], R0
-	MOV R1, 3
-	MOV [MOSTRA_ECRA], R1
-	MOV R11, 5000
-	CALL atraso
-	JMP verifica_flag_arvore
+	MOV R2, 2
+	MOV [flag_arvore_exibida], R2
+	JMP fim_rotina_arvore
 
-termina_animação_arvore:
+fim_rotina_arvore:
 	POP R2
 	POP R1
 	RET
