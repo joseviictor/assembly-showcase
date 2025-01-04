@@ -21,7 +21,7 @@ DEFINE_LINHA			EQU COMANDOS + 0AH		; endereço do comando para definir a linha
 DEFINE_COLUNA			EQU COMANDOS + 0CH		; endereço do comando para definir a coluna
 DEFINE_PIXEL			EQU COMANDOS + 12H		; endereço do comando para escrever um pixel
 APAGA_AVISO				EQU COMANDOS + 40H		; endereço do comando para apagar o aviso de nenhum cenário selecionado
-APAGA_ECRÃ				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
+APAGA_ECRA				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma imagem de fundo
 REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
 
@@ -42,6 +42,8 @@ TECLA_E					EQU 3					; tecla na terceira coluna do teclado (tecla E)
 TECLA_F					EQU 4					; tecla na terceira coluna do teclado (tecla F)
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
+
+DELAY					EQU 0200H				; valor usado para implementar um atraso temporal (0F00H = 3840)
 
 ; #######################################################################
 ; # ZONA DE DADOS 
@@ -84,11 +86,20 @@ largura:
 altura:
 	WORD 0				; espaço reservado para guardar a altura do objeto
 
-animação_neve:			; flag para determinar a execução da animação da neve
+animacao_neve:			; flag para determinar a execução da animação da neve
 	WORD 1
 
-animação_árvore:		; flag para determinar a execução da animação da árvore
-	WORD 1
+neve_em_exibicao:		; flag para determinar a exibição da neve
+	WORD 0
+
+animacao_arvore:		; flag para determinar a execução da animação da árvore
+	WORD 0
+
+contador_atraso:
+	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+
+flag_neve_exibida:
+	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0, 1 ou 2)
 
 giftbox:				; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  6, 8, 11, 15 	; linha,coluna,largura,altura
@@ -261,7 +272,7 @@ inicio:
 	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
 
     MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+    MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
     MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
 	MOV [SELECTIONA_MIDIA], R1 ; seleciona ficheiro de mídia 0 - som.
@@ -293,8 +304,23 @@ posição_objeto:
 	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 	CALL desenha_objetos
-	CALL anima_neve
-	CALL anima_arvore
+
+; ciclo das rotinas cooperativas no programa principal
+ciclo:
+	verifica_flag_neve:
+		MOV R3, [animacao_neve]
+		CMP R3, 0
+		JZ fim_ciclo
+		CALL anima_neve
+
+	verifica_flag_arvore:
+		MOV R3, [animacao_arvore]
+		CMP R3, 0
+		JZ fim_ciclo
+		CALL anima_arvore
+
+	fim_ciclo:
+		JMP ciclo
 
 stop_som:
 	MOV R1, 0				; nº do som a parar
@@ -318,33 +344,60 @@ desenha_objetos:
 	PUSH R5
 	PUSH R6
 	PUSH R7
+	PUSH R8
 
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
 
-reinicia_coluna:       		; desenha pixel na linha e coluna do objeto a partir da tabela
-	MOV R2, [coluna]		; reinicia a coluna para cada linha
+esconder_ecras_que_iniciam_ocultos:
+	CMP R7, 0					; se for o ecrã zero - neve 0
+	JZ esconde_neve				; esconde neve 0
+	CMP R7, 1					; se for o ecrã um - neve 1
+	JZ esconde_neve				; esconde neve 1
+	CMP R7, 3					; se for o ecrã três - luzes arvore 0
+	JZ esconde_luzes_arvore		; esconde luzes arvore 0
+	CMP R7, 4 					; se for o ecrã quatro - luzes arvore 1
+	JZ esconde_luzes_arvore		; esconde luzes arvore 1
+	JMP reinicia_coluna			; se não for nenhum dos ecrãs acima, reinicia a coluna
+
+esconde_neve:
+	MOV R8, 0					; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8		; comando do MediaCenter para esconder o ecrã
+	MOV R8, 1					; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8		; comando do MediaCenter para esconder o ecrã
+	JMP reinicia_coluna			; reinicia a coluna para desenhar o próximo objeto
+
+esconde_luzes_arvore:
+	MOV R8, 3					; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8		; comando do MediaCenter para esconder o ecrã
+	MOV R8, 4					; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8		; comando do MediaCenter para esconder o ecrã
+	JMP reinicia_coluna			; reinicia a coluna para desenhar o próximo objeto
+
+reinicia_coluna:       			; desenha pixel na linha e coluna do objeto a partir da tabela
+	MOV R2, [coluna]			; reinicia a coluna para cada linha
 
 desenha_pixel:
-	MOV	R3, [R4]			; obtém a cor do pixel do objeto
-	CALL escreve_pixel		; escreve cada pixel do objeto
+	MOV	R3, [R4]				; obtém a cor do pixel do objeto
+	CALL escreve_pixel			; escreve cada pixel do objeto
 
 próxima_coluna:
-	ADD	R4, 2				; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               ; próxima coluna
-    SUB R5, 1				; menos uma coluna para tratar
-    JNZ desenha_pixel      	; continua até percorrer toda a largura do objeto
+	ADD	R4, 2					; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+    ADD R2, 1               	; próxima coluna
+    SUB R5, 1					; menos uma coluna para tratar
+    JNZ desenha_pixel      		; continua até percorrer toda a largura do objeto
 
 próxima_linha:
-	ADD R1, 1				; próxima linha
-	MOV R5, [largura]		; reinicia a largura do objeto
-	SUB R6, 1				; menos uma linha para tratar
-	JNZ reinicia_coluna		; continua até percorrer todas as linhas
+	ADD R1, 1					; próxima linha
+	MOV R5, [largura]			; reinicia a largura do objeto
+	SUB R6, 1					; menos uma linha para tratar
+	JNZ reinicia_coluna			; continua até percorrer todas as linhas
 	
 próximo_objeto:
-	SUB R7, 1				; menos um ecrã para desenhar
-	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
+	SUB R7, 1					; menos um ecrã para desenhar
+	JNN posição_objeto			; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
+	POP R8
 	POP	R7
 	POP	R6
 	POP	R5
@@ -367,53 +420,67 @@ escreve_pixel:
 	RET
 
 ; **********************************************************************
-; ATRASO - Executa um ciclo para implementar um atraso.
-; Argumentos:   R11 - valor que define o atraso
-;
+; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; **********************************************************************
 atraso:
-	PUSH R11
-ciclo_atraso:
-	SUB	R11, 1
-	JNZ	ciclo_atraso
-	POP	R11
+	PUSH R2
+	MOV  R1, [contador_atraso]	; obtém valor do contador do atraso
+	SUB  R1, 1
+	MOV  [contador_atraso], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso
+	MOV  R2, DELAY
+	MOV  [contador_atraso], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso:
+	POP  R2
 	RET
 
 ; **********************************************************************
 ; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre objetos
 ; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
 ;				R2 - flag da animação
-;				R11 - Valor do atraso
 ;
 ; **********************************************************************
 ;PROCESS SP_inicial_neve
 anima_neve:
 	PUSH R1
 	PUSH R2
-	PUSH R11
 
-verifica_flag_neve:
-	MOV R2, [animação_neve]
+verifica_atraso:
+	CALL atraso
+	CMP R1, 0
+	JNZ fim_rotina_neve
+
+verifica_flag_neve_exibida:
+	MOV R2, [flag_neve_exibida]
+	CMP R2, 0
+	JZ mostra_neve_1
 	CMP R2, 1
-	JN verifica_flag_neve
+	JZ mostra_neve_2
+	CMP R2, 2
+	JZ mostra_neve_1
 
-animação:
+mostra_neve_1:
+	MOV R1, 0
+	MOV [MOSTRA_ECRA], R1
+	MOV R1, 1
+	MOV [ESCONDE_ECRA], R1
+	MOV R2, 1
+	MOV [flag_neve_exibida], R2
+	JMP fim_rotina_neve
+
+mostra_neve_2:
 	MOV R1, 0
 	MOV [ESCONDE_ECRA], R1
 	MOV R1, 1
 	MOV [MOSTRA_ECRA], R1
-	MOV R11, 7500
-	CALL atraso
-	MOV R1, 1
-	MOV [ESCONDE_ECRA], R1
-	MOV R1, 0
-	MOV [MOSTRA_ECRA], R1
-	MOV R11, 7500
-	CALL atraso
-	JMP verifica_flag_neve
+	MOV R2, 2
+	MOV [flag_neve_exibida], R2
+	JMP fim_rotina_neve
 
 fim_rotina_neve:
-	POP R11
 	POP R2
 	POP R1
 	RET
@@ -422,19 +489,12 @@ fim_rotina_neve:
 ; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre objetos de luzes de natal
 ; Argumentos:   R1 - Número do ecrã do objeto a alternar a exibição
 ;				R2 - flag da animação
-;				R11 - Valor do atraso
 ;
 ; **********************************************************************
 ;PROCESS SP_inicial_arvore
 anima_arvore:
 	PUSH R1
 	PUSH R2
-	PUSH R11
-
-verifica_flag_arvore:
-	MOV R2, [animação_árvore]
-	CMP R2, 1
-	JN verifica_flag_arvore
 
 animação_arvore:
 	MOV R1, 3
@@ -452,7 +512,6 @@ animação_arvore:
 	JMP verifica_flag_arvore
 
 termina_animação_arvore:
-	POP R11
 	POP R2
 	POP R1
 	RET
