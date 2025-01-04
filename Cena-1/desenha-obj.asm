@@ -62,17 +62,11 @@ SP_inicial_arvore:		; este é o endereço com que o SP deste processo deve ser i
 
 	STACK 100H			; espaço reservado para a pilha do processo "objeto"
 SP_inicial_neve:		; este é o endereço com que o SP deste processo deve ser inicializado
-							
-tecla_carregada:
-	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
-						; uma vez por cada tecla carregada
-							
-tecla_continuo:
-	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
-						; enquanto a tecla estiver carregada
-							
-evento_int_0:
-	LOCK 0				; LOCK para a rotina de interrupção comunicar ao processo objeto que a interrupção ocorreu
+
+coluna_carregada:
+	WORD 0				; variável que indica se uma tecla foi carregada
+						; 0 - nenhuma tecla carregada
+						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
 
 ; ##########################################################################################
 ; # variáveis para guardar a posição do objeto
@@ -93,10 +87,10 @@ altura:
 ; # variáveis para controlo de animações
 ; ##########################################################################################
 animacao_neve:			; flag para determinar se é para executar animação da neve
-	WORD 1
+	WORD 0
 
 animacao_arvore:		; flag para determinar se é para executar animação da árvore
-	WORD 1
+	WORD 0
 
 flag_neve_exibida:
 	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0 - nenhum, 1 ou 2)
@@ -313,6 +307,9 @@ posição_objeto:
 
 ; ciclo das rotinas cooperativas no programa principal
 ciclo:
+	CALL teclado			; verifica teclado
+	CALL teclado_animacao
+
 	verifica_flag_neve:
 		MOV R3, [animacao_neve]
 		CMP R3, 0
@@ -334,6 +331,10 @@ stop_som:
 
 fim:
     JMP fim                 ; termina programa
+
+; **********************************************************************
+; Rotina para desenho inicial dos objetos
+; **********************************************************************
 
 ; **********************************************************************
 ; DESENHA_OBJETOS - Desenha um objeto na linha e coluna indicadas
@@ -414,35 +415,8 @@ próximo_objeto:
 	RET
 
 ; **********************************************************************
-; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R3 - cor do pixel (em formato ARGB de 16 bits)
-;
+; Rotinas de animação
 ; **********************************************************************
-escreve_pixel:
-	MOV [DEFINE_LINHA], R1	; seleciona a linha
-	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
-	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
-	RET
-
-; **********************************************************************
-; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo,
-;		 de forma não bloqueante.
-; Argumentos: Nenhum
-; Saidas:		R1 - Se 0, o atraso chegou ao fim
-; **********************************************************************
-atraso:
-	PUSH R2
-	MOV  R1, [contador_atraso]	; obtém valor do contador do atraso
-	SUB  R1, 1
-	MOV  [contador_atraso], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso
-	MOV  R2, DELAY
-	MOV  [contador_atraso], R2	; volta a colocar o valor inicial no contador do atraso
-sai_atraso:
-	POP  R2
-	RET
 
 ; **********************************************************************
 ; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre 
@@ -540,3 +514,117 @@ fim_rotina_arvore:
 	POP R1
 	RET
 
+; **********************************************************************
+; Rotinas auxiliares 
+; **********************************************************************
+
+; **********************************************************************
+; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
+; Argumentos:   R1 - linha
+;               R2 - coluna
+;               R3 - cor do pixel (em formato ARGB de 16 bits)
+;
+; **********************************************************************
+escreve_pixel:
+	MOV [DEFINE_LINHA], R1	; seleciona a linha
+	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
+	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+	RET
+
+; **********************************************************************
+; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
+; **********************************************************************
+atraso:
+	PUSH R2
+	MOV  R1, [contador_atraso]	; obtém valor do contador do atraso
+	SUB  R1, 1
+	MOV  [contador_atraso], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso
+	MOV  R2, DELAY
+	MOV  [contador_atraso], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso:
+	POP  R2
+	RET
+
+; **********************************************************************
+; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
+;		  do teclado. Já não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; **********************************************************************
+teclado:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R5
+	MOV  R2, TEC_LIN         ; endereço do periférico das linhas
+	MOV  R3, TEC_COL         ; endereço do periférico das colunas
+	MOV  R5, MASCARA		 ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+
+	MOV  R1, LINHA_TECLADO           ; testar a linha 4 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	MOV  R2, 0               ; nenhuma tecla premida
+	JMP  sai_teclado
+ha_tecla:
+	MOV  R2, R0              ; houve uma tecla premida
+sai_teclado:
+	MOV  [coluna_carregada], R2	; atualiza na variável a informação sobre se houve ou não tecla premida
+							; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
+     POP  R5
+     POP  R3
+     POP  R2
+     POP  R1
+     POP  R0
+     RET                      ; retorna sempre, haja ou não uma tecla carregada
+
+; **********************************************************************
+; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
+;		  do teclado. Já não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; **********************************************************************
+teclado_animacao:
+	PUSH R0
+	PUSH R1
+
+	MOV R0, [coluna_carregada]
+	CMP R0, 0
+	JZ sai_rotina_teclado
+	CMP R0, 1
+	JZ tecla_premida
+	CMP R0, 2
+	JZ tecla_premida
+	CMP R0, 4
+	JZ tecla_premida
+	MOV R1, 8
+	CMP R0, R1
+	JZ tecla_premida
+
+	tecla_premida:
+	MOV R0, [animacao_neve]
+	CMP R0, 0
+	JZ ativa_animacao
+	CMP R0, 1
+	JZ desativa_animacao
+	
+	ativa_animacao:
+	MOV R1, 1
+	MOV [animacao_neve], R1
+	JMP sai_rotina_teclado
+
+	desativa_animacao:
+	MOV R1, 0
+	MOV [animacao_neve], R1
+	MOV [ESCONDE_ECRA], R1
+	MOV R1, 1
+	MOV [ESCONDE_ECRA], R1
+	JMP sai_rotina_teclado
+
+sai_rotina_teclado:
+	POP  R1
+    POP  R0
+    RET                      ; retorna sempre, haja ou não uma tecla carregada
