@@ -322,8 +322,8 @@ ciclo:
 		JZ fim_ciclo
 		CALL anima_arvore
 
-	fim_ciclo:
-		JMP ciclo
+fim_ciclo:
+	JMP ciclo
 
 stop_som:
 	MOV R1, 0				; nº do som a parar
@@ -551,7 +551,7 @@ sai_atraso:
 
 ; **********************************************************************
 ; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
-;		  do teclado. Já não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
 ; **********************************************************************
 teclado:
 	PUSH R0
@@ -584,8 +584,8 @@ sai_teclado:
      RET                      ; retorna sempre, haja ou não uma tecla carregada
 
 ; **********************************************************************
-; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
-;		  do teclado. Já não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; TECLADO - Rotina que deteta qual tecla do teclado foi carregada e ativa ou desativa a animação correspondente
+; Argumentos: Nenhum
 ; **********************************************************************
 teclado_animacao:
 	PUSH R0
@@ -646,4 +646,4 @@ desativa_animacao_arvore:
 sai_rotina_teclado:
 	POP  R1
     POP  R0
-    RET                      ; retorna sempre, haja ou não uma tecla carregada
+    RET                      
