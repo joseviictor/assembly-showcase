@@ -34,7 +34,7 @@ CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
-LINHA_TECLADO			EQU	8					; linha a testar (4ª linha, 1000b)
+LINHA_TECLADO			EQU	4					; linha a testar (4ª linha, 1000b)
 MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_C					EQU	1					; tecla na primeira coluna do teclado (tecla C)
 TECLA_D					EQU 2					; tecla na segunda coluna do teclado (tecla D)
@@ -63,6 +63,10 @@ SP_inicial_arvore:		; este é o endereço com que o SP deste processo deve ser i
 	STACK 100H			; espaço reservado para a pilha do processo "objeto"
 SP_inicial_neve:		; este é o endereço com que o SP deste processo deve ser inicializado
 
+linha_carregada:
+	WORD 0				; variável que indica se uma tecla foi carregada
+						; 0 - nenhuma tecla carregada
+						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
 coluna_carregada:
 	WORD 0				; variável que indica se uma tecla foi carregada
 						; 0 - nenhuma tecla carregada
@@ -307,8 +311,8 @@ posição_objeto:
 
 ; ciclo das rotinas cooperativas no programa principal
 ciclo:
-	CALL teclado			; verifica teclado
-	CALL teclado_animacao
+	CALL teclado			; verifica tecla premida
+	CALL acoes_teclado		; executa ações do teclado conforme tecla premida
 
 	verifica_flag_neve:
 		MOV R3, [animacao_neve]
@@ -563,58 +567,175 @@ teclado:
 	MOV  R3, TEC_COL         ; endereço do periférico das colunas
 	MOV  R5, MASCARA		 ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
-	MOV  R1, LINHA_TECLADO           ; testar a linha 4 
+testa_linha_1:
+	MOV  R1, 1				 ; testar a linha 1
 	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
 	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	MOV  R2, 0               ; nenhuma tecla premida
-	JMP  sai_teclado
+	MOV  R1, 0				 ; nenhuma tecla premida na linha 1 - será guardada na variável linha_carregada
+	MOV  R2, 0               ; nenhuma tecla premida na coluna 1 - será guardada na variável coluna_carregada
+	JMP testa_linha_2
+
+testa_linha_2:
+	MOV  R1, 2				 ; testar a linha 2 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	MOV  R1, 0				 ; nenhuma tecla premida na linha 2 - será guardada na variável linha_carregada
+	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
+	JMP testa_linha_3
+
+testa_linha_3:
+	MOV  R1, 4				 ; testar a linha 3 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	MOV  R1, 0				 ; nenhuma tecla premida na linha 3 - será guardada na variável linha_carregada
+	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
+	JMP testa_linha_4
+
+testa_linha_4:
+	MOV  R1, 8				 ; testar a linha 4 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	MOV  R1, 0				 ; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
+	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
+	JMP sai_teclado
+
 ha_tecla:
 	MOV  R2, R0              ; houve uma tecla premida
+
 sai_teclado:
-	MOV  [coluna_carregada], R2	; atualiza na variável a informação sobre se houve ou não tecla premida
-							; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
-     POP  R5
-     POP  R3
-     POP  R2
-     POP  R1
-     POP  R0
-     RET                      ; retorna sempre, haja ou não uma tecla carregada
+	MOV [linha_carregada], R1	; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma linha premida, 1, 2, 4, 8)
+	MOV  [coluna_carregada], R2	; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma coluna premida, 1, 2, 4, 8)
+								; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
+
+	POP R5
+    POP R3
+    POP R2
+    POP R1
+    POP R0
+    RET                      ; retorna sempre, haja ou não uma tecla carregada
 
 ; **********************************************************************
 ; TECLADO - Rotina que deteta qual tecla do teclado foi carregada e ativa ou desativa a animação correspondente
 ; Argumentos: Nenhum
 ; **********************************************************************
-teclado_animacao:
+acoes_teclado:
 	PUSH R0
 	PUSH R1
+	PUSH R2
 
-	MOV R0, [coluna_carregada]
+	MOV R0, [linha_carregada]
+	MOV R1, [coluna_carregada]
 	CMP R0, 0
 	JZ sai_rotina_teclado
+
+verifica_linha_1:
 	CMP R0, 1
-	JZ tecla_premida_C
+	JNZ verifica_linha_2
+	CMP R1, 1
+	JZ tecla_premida_0
+	CMP R1, 2
+	JZ tecla_premida_1
+	CMP R1, 3
+	JZ tecla_premida_2
+	CMP R1, 4
+	JZ tecla_premida_3
+
+verifica_linha_2:
 	CMP R0, 2
-	JZ tecla_premida_D
+	JNZ verifica_linha_3
+	CMP R1, 1
+	JZ tecla_premida_4
+	CMP R1, 2
+	JZ tecla_premida_5
+	CMP R1, 3
+	JZ tecla_premida_6
+	CMP R1, 4
+	JZ tecla_premida_7
+
+verifica_linha_3:
 	CMP R0, 4
+	JNZ verifica_linha_4
+	CMP R1, 1
+	JZ tecla_premida_8
+	CMP R1, 2
+	JZ tecla_premida_9
+	CMP R1, 3
+	JZ tecla_premida_A
+	CMP R1, 4
+	JZ tecla_premida_B
+
+verifica_linha_4:
+	MOV R2, 8					; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com constante 8
+	CMP R0, R2
+	JNZ sai_rotina_teclado
+	CMP R1, 1
+	JZ tecla_premida_C
+	CMP R1, 2
+	JZ tecla_premida_D
+	CMP R1, 3
 	JZ tecla_premida_E
-	MOV R1, 8
-	CMP R0, R1
+	CMP R1, 4
 	JZ tecla_premida_F
 
+tecla_premida_0:
+	JMP sai_rotina_teclado
+
+tecla_premida_1:
+	JMP sai_rotina_teclado
+
+tecla_premida_2:
+	JMP sai_rotina_teclado
+
+tecla_premida_3:
+	JMP sai_rotina_teclado
+
+tecla_premida_4:
+	JMP sai_rotina_teclado
+
+tecla_premida_5:
+	JMP sai_rotina_teclado
+
+tecla_premida_6:
+	JMP sai_rotina_teclado
+
+tecla_premida_7:
+	JMP sai_rotina_teclado
+
+tecla_premida_8:
+	JMP seleciona_imagem_bg_0
+
+tecla_premida_9:
+	JMP seleciona_imagem_bg_1
+
+tecla_premida_A:
+	JMP seleciona_imagem_bg_2
+
+tecla_premida_B:
+	JMP seleciona_imagem_bg_3
+
 tecla_premida_C:
-	JZ ativa_animacao_neve
+	JMP ativa_animacao_neve
 
 tecla_premida_D:
-	JZ desativa_animacao_neve
+	JMP desativa_animacao_neve
 
 tecla_premida_E:
-	JZ ativa_animacao_arvore
+	JMP ativa_animacao_arvore
 
 tecla_premida_F:
-	JZ desativa_animacao_arvore
+	JMP desativa_animacao_arvore
 	
 ativa_animacao_neve:
 	MOV R1, 1
@@ -643,7 +764,28 @@ desativa_animacao_arvore:
 	MOV [ESCONDE_ECRA], R1
 	JMP sai_rotina_teclado
 
+seleciona_imagem_bg_0:
+	MOV R1, 0
+	MOV [SELECIONA_BG], R1
+	JMP sai_rotina_teclado
+
+seleciona_imagem_bg_1:
+	MOV R1, 1
+	MOV [SELECIONA_BG], R1
+	JMP sai_rotina_teclado
+
+seleciona_imagem_bg_2:
+	MOV R1, 2
+	MOV [SELECIONA_BG], R1
+	JMP sai_rotina_teclado
+
+seleciona_imagem_bg_3:
+	MOV R1, 3
+	MOV [SELECIONA_BG], R1
+	JMP sai_rotina_teclado
+
 sai_rotina_teclado:
+	POP  R2
 	POP  R1
     POP  R0
     RET                      
