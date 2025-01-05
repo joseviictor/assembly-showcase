@@ -644,8 +644,8 @@ acoes_teclado:
 	PUSH R1
 	PUSH R2
 
-	MOV R0, [linha_carregada]
-	MOV R1, [coluna_carregada]
+	MOV R0, [linha_carregada]	; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
+	MOV R1, [coluna_carregada]	; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
 	CMP R0, 0
 	JZ sai_rotina_teclado
 
@@ -689,9 +689,9 @@ verifica_linha_3:
 	JZ seleciona_imagem_bg_3
 
 verifica_linha_4:
-	MOV R2, 8						; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com constante 8
+	MOV R2, 8						; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com k = 8
 	CMP R0, R2						; verifica se nenhuma tecla foi premida na linha 4
-	JNZ sai_rotina_teclado
+	JNZ sai_rotina_teclado			
 	CMP R1, 1						; verifica se tecla premida é C
 	JZ ativa_animacao_neve
 	CMP R1, 2						; verifica se tecla premida é D
@@ -704,47 +704,47 @@ verifica_linha_4:
 	
 ativa_animacao_neve:
 	MOV R1, 1
-	MOV [animacao_neve], R1
+	MOV [animacao_neve], R1			; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
 	JMP sai_rotina_teclado
 
 desativa_animacao_neve:
 	MOV R1, 0
-	MOV [animacao_neve], R1
-	MOV [ESCONDE_ECRA], R1
+	MOV [animacao_neve], R1			; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV [ESCONDE_ECRA], R1			; comando do media center ocultar o ecrã que possui o objeto da neve 1
 	MOV R1, 1
-	MOV [ESCONDE_ECRA], R1
+	MOV [ESCONDE_ECRA], R1			; comando do media center ocultar o ecrã que possui o objeto da neve 2
 	JMP sai_rotina_teclado
 	
 ativa_animacao_arvore:
 	MOV R1, 1
-	MOV [animacao_arvore], R1
+	MOV [animacao_arvore], R1		; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
 	JMP sai_rotina_teclado
 
 desativa_animacao_arvore:
 	MOV R1, 0
-	MOV [animacao_arvore], R1
+	MOV [animacao_arvore], R1		; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
 	MOV R1, 3
-	MOV [ESCONDE_ECRA], R1
+	MOV [ESCONDE_ECRA], R1			; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
 	MOV R1, 4
-	MOV [ESCONDE_ECRA], R1
+	MOV [ESCONDE_ECRA], R1			; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
 	JMP sai_rotina_teclado
 
-seleciona_imagem_bg_0:
+seleciona_imagem_bg_0:				; seleciona imagem de fundo 0
 	MOV R1, 0
 	MOV [SELECIONA_BG], R1
 	JMP sai_rotina_teclado
 
-seleciona_imagem_bg_1:
+seleciona_imagem_bg_1:				; seleciona imagem de fundo 1
 	MOV R1, 1
 	MOV [SELECIONA_BG], R1
 	JMP sai_rotina_teclado
 
-seleciona_imagem_bg_2:
+seleciona_imagem_bg_2:				; seleciona imagem de fundo 2
 	MOV R1, 2
 	MOV [SELECIONA_BG], R1
 	JMP sai_rotina_teclado
 
-seleciona_imagem_bg_3:
+seleciona_imagem_bg_3:				; seleciona imagem de fundo 3
 	MOV R1, 3
 	MOV [SELECIONA_BG], R1
 	JMP sai_rotina_teclado
