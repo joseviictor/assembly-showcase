@@ -26,11 +26,12 @@ SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma im
 REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
 
 SELECTIONA_MIDIA		EQU COMANDOS + 48H		; seleciona arquivo de midia (GIF, som ou video), para ser usado nos comandos subsequentes
-INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som continuamente até ser parado
+INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som especificado, continuamente até ser parado
 VOLUME_SOM				EQU COMANDOS + 4AH		; define volume do som (0-100%)
-PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
-PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
-CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
+PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som especificado
+PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som especificado
+CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som especificado
+PARA_TODOS_SONS			EQU COMANDOS + 68H		; endereço do comando para parar todos os sons
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
@@ -43,20 +44,11 @@ DELAY					EQU 0200H				; valor usado para implementar um atraso temporal (0200H 
 ; #######################################################################
 ; # ZONA DE DADOS 
 ; #######################################################################
-	PLACE		0300H
+	PLACE		0500H
 
 ; Reserva do espaço para as pilhas dos processos
-	STACK 100H			; espaço reservado para a pilha do processo "programa principal"
+	STACK 200H			; espaço reservado para a pilha do processo "programa principal"
 SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve ser inicializado
-							
-	STACK 100H			; espaço reservado para a pilha do processo "teclado"
-SP_inicial_teclado:		; este é o endereço com que o SP deste processo deve ser inicializado
-							
-	STACK 100H			; espaço reservado para a pilha do processo "objeto"
-SP_inicial_arvore:		; este é o endereço com que o SP deste processo deve ser inicializado
-
-	STACK 100H			; espaço reservado para a pilha do processo "objeto"
-SP_inicial_neve:		; este é o endereço com que o SP deste processo deve ser inicializado
 
 linha_carregada:
 	WORD 0				; variável que indica se uma tecla foi carregada
@@ -274,7 +266,7 @@ inicio:
     MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
     MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
-	MOV [SELECTIONA_MIDIA], R1 ; seleciona ficheiro de mídia 0 - som.
+	MOV [SELECTIONA_MIDIA], R1	; seleciona som a reproduzir
 	MOV [INICIA_SOM], R1	; reproduz som
 	MOV R1, 100				; define valor a ser usado como volume do som.
 	MOV [VOLUME_SOM], R1	; define volume som como 100%
@@ -549,6 +541,25 @@ sai_atraso:
 	RET
 
 ; **********************************************************************
+; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado.
+; Argumentos:   R1 - número do som a reproduzir
+;
+; **********************************************************************
+	PUSH R1
+	PUSH R2
+
+reproduz_som:
+	MOV R2, 100					; define valor a ser usado como volume do som.
+	MOV [PARA_TODOS_SONS], R2	; para todos os sons
+	MOV [SELECTIONA_MIDIA], R1
+	MOV [VOLUME_SOM], R2
+	MOV [INICIA_SOM], R1
+
+	POP R2
+	POP R1
+	RET
+
+; **********************************************************************
 ; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
 ;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
 ; **********************************************************************
@@ -558,6 +569,7 @@ teclado:
 	PUSH R2
 	PUSH R3
 	PUSH R5
+	
 	MOV  R2, TEC_LIN         ; endereço do periférico das linhas
 	MOV  R3, TEC_COL         ; endereço do periférico das colunas
 	MOV  R5, MASCARA		 ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
@@ -635,102 +647,54 @@ verifica_linha_1:
 	CMP R0, 1
 	JNZ verifica_linha_2
 	CMP R1, 1
-	JZ tecla_premida_0
+	JZ sai_rotina_teclado
 	CMP R1, 2
-	JZ tecla_premida_1
+	JZ sai_rotina_teclado
 	CMP R1, 4
-	JZ tecla_premida_2
+	JZ sai_rotina_teclado
 	MOV R2, 8
 	CMP R1, R2
-	JZ tecla_premida_3
+	JZ sai_rotina_teclado
 
 verifica_linha_2:
 	CMP R0, 2
 	JNZ verifica_linha_3
 	CMP R1, 1
-	JZ tecla_premida_4
+	JZ para_som
 	CMP R1, 2
-	JZ tecla_premida_5
+	JZ reproduz_som_0
 	CMP R1, 4
-	JZ tecla_premida_6
+	JZ reproduz_som_1
 	MOV R2, 8
 	CMP R1, R2
-	JZ tecla_premida_7
+	JZ reproduz_som_2
 
 verifica_linha_3:
 	CMP R0, 4
 	JNZ verifica_linha_4
 	CMP R1, 1
-	JZ tecla_premida_8
+	JZ seleciona_imagem_bg_0
 	CMP R1, 2
-	JZ tecla_premida_9
+	JZ seleciona_imagem_bg_1
 	CMP R1, 4
-	JZ tecla_premida_A
+	JZ seleciona_imagem_bg_2
 	MOV R2, 8
 	CMP R1, R2
-	JZ tecla_premida_B
+	JZ seleciona_imagem_bg_3
 
 verifica_linha_4:
-	MOV R2, 8					; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com constante 8
-	CMP R0, R2
+	MOV R2, 8						; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com constante 8
+	CMP R0, R2						; verifica se nenhuma tecla foi premida na linha 4
 	JNZ sai_rotina_teclado
-	CMP R1, 1
-	JZ tecla_premida_C
-	CMP R1, 2
-	JZ tecla_premida_D
-	CMP R1, 3
-	JZ tecla_premida_E
+	CMP R1, 1						; verifica se tecla premida é C
+	JZ ativa_animacao_neve
+	CMP R1, 2						; verifica se tecla premida é D
+	JZ desativa_animacao_neve
+	CMP R1, 3						; verifica se tecla premida é E
+	JZ ativa_animacao_arvore
 	MOV R2, 8
-	CMP R1, R2
-	JZ tecla_premida_F
-
-tecla_premida_0:
-	JMP sai_rotina_teclado
-
-tecla_premida_1:
-	JMP sai_rotina_teclado
-
-tecla_premida_2:
-	JMP sai_rotina_teclado
-
-tecla_premida_3:
-	JMP sai_rotina_teclado
-
-tecla_premida_4:
-	JMP sai_rotina_teclado
-
-tecla_premida_5:
-	JMP sai_rotina_teclado
-
-tecla_premida_6:
-	JMP sai_rotina_teclado
-
-tecla_premida_7:
-	JMP sai_rotina_teclado
-
-tecla_premida_8:
-	JMP seleciona_imagem_bg_0
-
-tecla_premida_9:
-	JMP seleciona_imagem_bg_1
-
-tecla_premida_A:
-	JMP seleciona_imagem_bg_2
-
-tecla_premida_B:
-	JMP seleciona_imagem_bg_3
-
-tecla_premida_C:
-	JMP ativa_animacao_neve
-
-tecla_premida_D:
-	JMP desativa_animacao_neve
-
-tecla_premida_E:
-	JMP ativa_animacao_arvore
-
-tecla_premida_F:
-	JMP desativa_animacao_arvore
+	CMP R1, R2						; verifica se tecla premida é F
+	JZ desativa_animacao_arvore
 	
 ativa_animacao_neve:
 	MOV R1, 1
@@ -777,6 +741,26 @@ seleciona_imagem_bg_2:
 seleciona_imagem_bg_3:
 	MOV R1, 3
 	MOV [SELECIONA_BG], R1
+	JMP sai_rotina_teclado
+
+reproduz_som_0:
+	MOV R1, 0
+	CALL reproduz_som
+	JMP sai_rotina_teclado
+
+reproduz_som_1:
+	MOV R1, 1
+	CALL reproduz_som
+	JMP sai_rotina_teclado
+
+reproduz_som_2:
+	MOV R1, 2
+	CALL reproduz_som
+	JMP sai_rotina_teclado
+
+para_som:
+	MOV R1, 0
+	MOV [PARA_TODOS_SONS], R1
 	JMP sai_rotina_teclado
 
 sai_rotina_teclado:

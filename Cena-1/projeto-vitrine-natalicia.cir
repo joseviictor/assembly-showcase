@@ -1291,7 +1291,11 @@
     "moduleDelay" : 5,
     "positionX" : 797,
     "positionY" : 541,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 1353,
+    "simGuiYRelative" : 658,
+    "simGuiWidth" : 166,
+    "simGuiHeight" : 187,
     "columns" : 4,
     "key numbers radix" : "Hexadecimal",
     "key color" : "Default",
@@ -1354,7 +1358,11 @@
     "moduleDelay" : 5,
     "positionX" : 629,
     "positionY" : 229,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 884,
+    "simGuiYRelative" : 62,
+    "simGuiWidth" : 1024,
+    "simGuiHeight" : 512,
     "columnAddressNBits" : 6,
     "lineAddressNBits" : 5,
     "windowScreenWidthPixels" : 1024,
@@ -1362,8 +1370,20 @@
     "defaultPenColor" : 0,
     "image paths" : [ "background-img/black bg.png", "background-img/wood bg.png", "background-img/red_bg.png", "background-img/black framed.png" ],
     "sounds/videos settings" : [ {
+      "filePathName" : "audio/christmas-party-time-249613 (1).mp3",
+      "relative sound volume" : 0.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
       "filePathName" : "audio/christmas-spirit.mp3",
-      "relative sound volume" : 1.0,
+      "relative sound volume" : 0.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "audio/we-wish-you-a-merry-christmas-happy-remix-background-intro-theme-277943 (1).mp3",
+      "relative sound volume" : 0.08,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
