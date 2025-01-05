@@ -1,15 +1,19 @@
 ; ####################################################################################################################
-; * IST-UL | UAlg
-; * Modulo:    lab4-objeto.asm
-; * Descrição: Este programa ilustra o desenho de um objeto do ecrã, em que os pixels
-; *            são definidos por uma tabela.
-; *			A zona de dados coloca-se tipicamente primeiro, para ser mais visível,
-; *			mas o código tem de começar no endereço 0000H. As diretivas PLACE
-; *			permitem esta inversão da ordem de dados e código no programa face aos endereços
+; * UAlg | ISE-Dee | Arquitetura de Computadores | 2024-2025
+; * Trabalho Final da Unidade Curricular Arquitetura de Computadores
+; * Autor: José Victor Santos (a56278), Diogo Rodrigues (79299), Gonçalo Marques (71433)
+
+; * Descrição: Este projeto consiste em aplicar conceitos de arquiteura de computadores para criar uma 
+; * “Vitrine Natalícia”, para ser colocada na montra de uma loja (real ou imaginária, à sua escolha). 
+; * O projeto é obrigatoriamente desenvolvido no Simulador SIMAC, na versão 2.3.0 (Out 2024), disponível na Tutoria.
+; *  A vitrine festiva consiste, genericamente, num ecrã multimédia (MediaCenter), que irá apresentar 
+; * elementos decorativos de Natal e/ou Ano Novo, em Pixel Art. Alguns dos elementos devem ser 
+; * animados, podendo ter desde animações simples (e.g., piscar) até outras mais elaboradas, como 
+; * movimento pelo ecrã.
 ; ####################################################################################################################
 
 ; ####################################################################################################################
-; * Constantes
+; * CONSTANTES
 ; ####################################################################################################################
 COMANDOS				EQU	6000H				; endereço de base dos comandos do MediaCenter
 
@@ -259,7 +263,7 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 	WORD  0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H
 
 ; ####################################################################################################################
-; * Código
+; * CÓDIGO
 ; ####################################################################################################################
 	PLACE   0				; o código tem de começar em 0000H
 inicio:
@@ -327,7 +331,7 @@ fim:
     JMP fim                 ; termina programa
 
 ; ####################################################################################################################
-; * Rotinas
+; * ROTINAS
 ; ####################################################################################################################
 
 ; ********************************************************************************************************************
