@@ -574,8 +574,6 @@ testa_linha_1:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	MOV  R1, 0				 ; nenhuma tecla premida na linha 1 - será guardada na variável linha_carregada
-	MOV  R2, 0               ; nenhuma tecla premida na coluna 1 - será guardada na variável coluna_carregada
 	JMP testa_linha_2
 
 testa_linha_2:
@@ -585,8 +583,6 @@ testa_linha_2:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	MOV  R1, 0				 ; nenhuma tecla premida na linha 2 - será guardada na variável linha_carregada
-	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
 	JMP testa_linha_3
 
 testa_linha_3:
@@ -596,8 +592,6 @@ testa_linha_3:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	MOV  R1, 0				 ; nenhuma tecla premida na linha 3 - será guardada na variável linha_carregada
-	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
 	JMP testa_linha_4
 
 testa_linha_4:
@@ -647,9 +641,10 @@ verifica_linha_1:
 	JZ tecla_premida_0
 	CMP R1, 2
 	JZ tecla_premida_1
-	CMP R1, 3
-	JZ tecla_premida_2
 	CMP R1, 4
+	JZ tecla_premida_2
+	MOV R2, 8
+	CMP R1, R2
 	JZ tecla_premida_3
 
 verifica_linha_2:
@@ -659,9 +654,10 @@ verifica_linha_2:
 	JZ tecla_premida_4
 	CMP R1, 2
 	JZ tecla_premida_5
-	CMP R1, 3
-	JZ tecla_premida_6
 	CMP R1, 4
+	JZ tecla_premida_6
+	MOV R2, 8
+	CMP R1, R2
 	JZ tecla_premida_7
 
 verifica_linha_3:
@@ -671,9 +667,10 @@ verifica_linha_3:
 	JZ tecla_premida_8
 	CMP R1, 2
 	JZ tecla_premida_9
-	CMP R1, 3
-	JZ tecla_premida_A
 	CMP R1, 4
+	JZ tecla_premida_A
+	MOV R2, 8
+	CMP R1, R2
 	JZ tecla_premida_B
 
 verifica_linha_4:
@@ -686,7 +683,8 @@ verifica_linha_4:
 	JZ tecla_premida_D
 	CMP R1, 3
 	JZ tecla_premida_E
-	CMP R1, 4
+	MOV R2, 8
+	CMP R1, R2
 	JZ tecla_premida_F
 
 tecla_premida_0:

@@ -1360,7 +1360,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 0,
-    "image paths" : [ "background-img/black bg.png", "background-img/wood bg.png", "background-img/red bg.jpg", "background-img/black framed.png" ],
+    "image paths" : [ "background-img/black bg.png", "background-img/wood bg.png", "background-img/red_bg.png", "background-img/black framed.png" ],
     "sounds/videos settings" : [ {
       "filePathName" : "audio/christmas-spirit.mp3",
       "relative sound volume" : 1.0,
