@@ -34,12 +34,7 @@ CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
-LINHA_TECLADO			EQU	4					; linha a testar (4ª linha, 1000b)
 MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
-TECLA_C					EQU	1					; tecla na primeira coluna do teclado (tecla C)
-TECLA_D					EQU 2					; tecla na segunda coluna do teclado (tecla D)
-TECLA_E					EQU 3					; tecla na terceira coluna do teclado (tecla E)
-TECLA_F					EQU 4					; tecla na terceira coluna do teclado (tecla F)
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
@@ -601,6 +596,8 @@ testa_linha_4:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
+
+nao_ha_tecla:
 	MOV  R1, 0				 ; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
 	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
 	JMP sai_teclado
