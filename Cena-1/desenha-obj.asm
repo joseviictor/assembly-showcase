@@ -96,6 +96,9 @@ flag_arvore_exibida:
 contador_atraso:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
 
+contador_atraso_2:
+	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+
 estado_giftbox:
 	WORD 7,1			; Variavel que informa o número do ecrã do objeto (7) e se a giftbox está sendo exibida (1) ou ocultada (0)
 
@@ -490,7 +493,7 @@ anima_arvore:
 	PUSH R2
 
 verifica_atraso_arvore:
-	CALL atraso
+	CALL atraso_2
 	CMP R1, 0
 	JNZ fim_rotina_arvore
 
@@ -558,6 +561,24 @@ atraso:
 	MOV  R2, DELAY
 	MOV  [contador_atraso], R2	; volta a colocar o valor inicial no contador do atraso
 sai_atraso:
+	POP  R2
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
+; -------------------------------------------------------------------------------------------------------------------
+atraso_2:
+	PUSH R2
+	MOV  R1, [contador_atraso_2]	; obtém valor do contador do atraso
+	SUB  R1, 1
+	MOV  [contador_atraso_2], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso_2
+	MOV  R2, DELAY
+	MOV  [contador_atraso_2], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso_2:
 	POP  R2
 	RET
 
