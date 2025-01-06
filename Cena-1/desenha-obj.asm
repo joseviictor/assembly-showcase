@@ -600,7 +600,7 @@ reproduz_som:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Rotina para exibir os objetos no ecrã
-; Argumentos: R1 - número do objeto
+; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ; -------------------------------------------------------------------------------------------------------------------
 exibe_objeto:
 	PUSH R1
@@ -613,11 +613,11 @@ exibe_objeto:
 	MOV R3, [R1]			; obtém estado do objeto
 	
 	CMP R3, 0				; verifica se objeto está ocultado
-	JZ mostra_objeto		
-	JMP esconde_objeto
+	JZ mostra_objeto		; se estiver ocultado, mostra o objeto
+	JMP esconde_objeto		; se estiver sendo exibido, oculta-o
 
 mostra_objeto:
-	MOV [MOSTRA_ECRA], R2	
+	MOV [MOSTRA_ECRA], R2
 	MOV R4, 1
 	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
 	
