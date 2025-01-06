@@ -295,10 +295,6 @@ inicio:
 	MOV [VOLUME_SOM], R1	; define volume som como 100%
 	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
-
-	; cria processos. O CALL não invoca a rotina, apenas cria um processo executável
-	;CALL	teclado			; cria o processo teclado
-	;CALL	objeto			; cria o processo objeto
      
 posição_objeto:
     MOV R1, [R4]			; obtém a linha do objeto, será decrementada para controlo de fluxo
@@ -327,7 +323,7 @@ ciclo:
 	verifica_flag_neve:
 		MOV R3, [animacao_neve]
 		CMP R3, 0
-		JZ fim_ciclo
+		JZ verifica_flag_arvore
 		CALL anima_neve
 
 	verifica_flag_arvore:
