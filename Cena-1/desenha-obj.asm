@@ -688,7 +688,6 @@ testa_linha_1:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	JMP testa_linha_2
 
 testa_linha_2:
 	MOV  R1, 2				 ; testar a linha 2 
@@ -697,7 +696,6 @@ testa_linha_2:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	JMP testa_linha_3
 
 testa_linha_3:
 	MOV  R1, 4				 ; testar a linha 3 
@@ -706,7 +704,6 @@ testa_linha_3:
 	AND  R0, R5				 ; elimina bits para além dos bits 0-3
 	CMP  R0, 0               ; há tecla premida?
 	JNZ  ha_tecla
-	JMP testa_linha_4
 
 testa_linha_4:
 	MOV  R1, 8				 ; testar a linha 4 
