@@ -285,17 +285,17 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 inicio:
 	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
 
-    MOV [APAGA_AVISO], R1				; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV [APAGA_ECRA], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 0							; cenário de fundo número 0
-    MOV [SELECIONA_BG], R1				; seleciona o cenário de fundo
-	MOV [SELECTIONA_MIDIA], R1			; seleciona som a reproduzir
-	MOV [INICIA_SOM], R1				; reproduz som
-	MOV R1, 0							; define valor a ser usado como volume do som.
-	MOV [VOLUME_SOM], R1				; define volume som como 100%
-	MOV	R4, giftbox						; endereço da tabela que define o primeiro objeto
-	MOV R7, NUM_ECRAS					; num total de ecrãs a desenhar (NUM_ECRAS + 1)
-    
+  MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+  MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 0				; cenário de fundo número 0
+  MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
+	MOV [SELECTIONA_MIDIA], R1	; seleciona som a reproduzir
+	MOV [INICIA_SOM], R1	; reproduz som
+	MOV R1, 0				; define valor a ser usado como volume do som.
+	MOV [VOLUME_SOM], R1	; define volume som como 100%
+	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
+	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
+     
 posição_objeto:
     MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
 	MOV [linha], R1						; guarda LINHA do objeto
@@ -322,8 +322,8 @@ ciclo:									; ciclo das rotinas cooperativas no programa principal
 	verifica_flag_neve:					; Verifica se a animação de neve deve ser executada
 		MOV R3, [animacao_neve]			
 		CMP R3, 0
-		JZ fim_ciclo					; Se a flag de animação de neve for (0), salta para fim_ciclo
-		CALL anima_neve					; executa a animação da neve
+		JZ verifica_flag_arvore
+		CALL anima_neve
 
 	verifica_flag_arvore:				; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_arvore]
@@ -595,7 +595,7 @@ reproduz_som:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Rotina para exibir os objetos no ecrã
-; Argumentos: R1 - número do objeto
+; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ; -------------------------------------------------------------------------------------------------------------------
 exibe_objeto:
 	PUSH R1								; Salva o valor de R1 na pilha
@@ -606,7 +606,6 @@ exibe_objeto:
 	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
 	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
 	MOV R3, [R1]						; obtém estado do objeto
-	
 	CMP R3, 0							; verifica se objeto está ocultado
 	JZ mostra_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
 	JMP esconde_objeto					; Caso contrário, oculta o objeto
@@ -624,7 +623,7 @@ mostra_objeto:
 	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
 	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
 	JMP fim_exibe_objeto				; Finaliza a rotina
-
+  
 esconde_objeto:
 	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
 	MOV R4, 0							; define o novo estado como "ocultado" (0)
