@@ -281,14 +281,14 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 ; ####################################################################################################################
 ; * CÓDIGO
 ; ####################################################################################################################
-	PLACE   0				; o código tem de começar em 0000H
+	PLACE   0							; o código tem de começar em 0000H
 inicio:
 	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
 
-    MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+  MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+  MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0				; cenário de fundo número 0
-    MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
+  MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
 	MOV [SELECTIONA_MIDIA], R1	; seleciona som a reproduzir
 	MOV [INICIA_SOM], R1	; reproduz som
 	MOV R1, 0				; define valor a ser usado como volume do som.
@@ -297,46 +297,45 @@ inicio:
 	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
      
 posição_objeto:
-    MOV R1, [R4]			; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1			; guarda LINHA do objeto
-	ADD R4, 2				; avança para a 2ª palavra da tabela que define o objeto
+    MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
+	MOV [linha], R1						; guarda LINHA do objeto
+	ADD R4, 2							; avança para a 2ª palavra da tabela que define o objeto
 	
-	MOV R2, [R4]			; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	MOV [coluna], R2		; guarda coluna do objeto
-	ADD R4, 2				; avança para a 3ª palavra da tabela que define o objeto
+	MOV R2, [R4]						; obtém a coluna do objeto, será decrementada para controlo de fluxo
+	MOV [coluna], R2					; guarda coluna do objeto
+	ADD R4, 2							; avança para a 3ª palavra da tabela que define o objeto
 	
-	MOV R5, [R4]			; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5		; guarda largura
-	ADD R4, 2				; avança para a 4ª palavra da tabela que define o objeto
+	MOV R5, [R4]						; obtém a largura do objeto - será decrementada para controlo de fluxo
+	MOV [largura], R5					; guarda largura
+	ADD R4, 2							; avança para a 4ª palavra da tabela que define o objeto
 	
-	MOV R6, [R4]			; obtém a altura do objeto
-	MOV [altura], R6		; guarda a altura do objeto
-	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
+	MOV R6, [R4]						; obtém a altura do objeto
+	MOV [altura], R6					; guarda a altura do objeto
+	ADD R4, 2							; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 	CALL desenha_objetos
 
-; ciclo das rotinas cooperativas no programa principal
-ciclo:
-	CALL teclado			; verifica tecla premida
-	CALL acoes_teclado		; executa ações do teclado conforme tecla premida
+ciclo:									; ciclo das rotinas cooperativas no programa principal
+	CALL teclado						; verifica tecla premida
+	CALL acoes_teclado					; executa ações do teclado conforme tecla premida
 
-	verifica_flag_neve:
-		MOV R3, [animacao_neve]
+	verifica_flag_neve:					; Verifica se a animação de neve deve ser executada
+		MOV R3, [animacao_neve]			
 		CMP R3, 0
 		JZ verifica_flag_arvore
 		CALL anima_neve
 
-	verifica_flag_arvore:
+	verifica_flag_arvore:				; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_arvore]
 		CMP R3, 0
-		JZ fim_ciclo
-		CALL anima_arvore
+		JZ fim_ciclo					; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		CALL anima_arvore				; executa a animação da arvore
 
 fim_ciclo:
-	JMP ciclo
+	JMP ciclo				 			; volta para o início do loop principal
 
 fim:
-    JMP fim                 ; termina programa
+    JMP fim                 			; finaliza o programa
 
 ; ####################################################################################################################
 ; * ROTINAS
@@ -361,20 +360,20 @@ desenha_objetos:
 	PUSH R5
 	PUSH R6
 	PUSH R7
-	PUSH R8
+	PUSH R8						; Salva os registros usados para restaurar no final
 
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
 
 esconder_ecras_que_iniciam_ocultos:
-	CMP R7, 0					; se for o ecrã zero - neve 0
-	JZ esconde_neve				; esconde neve 0
-	CMP R7, 1					; se for o ecrã um - neve 1
-	JZ esconde_neve				; esconde neve 1
-	CMP R7, 3					; se for o ecrã três - luzes arvore 0
-	JZ esconde_luzes_arvore		; esconde luzes arvore 0
-	CMP R7, 4 					; se for o ecrã quatro - luzes arvore 1
-	JZ esconde_luzes_arvore		; esconde luzes arvore 1
+	CMP R7, 0					; se for o ecrã (0) - neve (0)
+	JZ esconde_neve				; esconde neve (0)
+	CMP R7, 1					; se for o ecrã (1) - neve (1)
+	JZ esconde_neve				; esconde neve (1)
+	CMP R7, 3					; se for o ecrã (3) - luzes arvore (0)
+	JZ esconde_luzes_arvore		; esconde luzes arvore (0)
+	CMP R7, 4 					; se for o ecrã (4) - luzes arvore (1)
+	JZ esconde_luzes_arvore		; esconde luzes arvore (1)
 	JMP reinicia_coluna			; se não for nenhum dos ecrãs acima, reinicia a coluna
 
 esconde_neve:
@@ -411,10 +410,10 @@ próxima_linha:
 	JNZ reinicia_coluna			; continua até percorrer todas as linhas
 	
 próximo_objeto:
-	SUB R7, 1					; menos um ecrã para desenhar
+	SUB R7, 1					; decrementa os ecrãs para desenhar
 	JNN posição_objeto			; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
-	POP R8
+	POP R8						; Restaura os registros e retorna
 	POP	R7
 	POP	R6
 	POP	R5
@@ -434,43 +433,43 @@ próximo_objeto:
 ; -------------------------------------------------------------------------------------------------------------------
 ;PROCESS SP_inicial_neve
 anima_neve:
-	PUSH R1
-	PUSH R2
+	PUSH R1									; Salva o conteúdo de R1
+	PUSH R2									; Salva o conteúdo de R2
 
-verifica_atraso_neve:
-	CALL atraso_neve
-	CMP R1, 0
-	JNZ fim_rotina_neve
+verifica_atraso_neve:						; Verifica se o atraso necessário para a animação foi atingido
+	CALL atraso_neve						; Chama a rotina para verificar atraso
+	CMP R1, 0								; Compara o resultado da verificação
+	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
 
-verifica_flag_neve_exibida:
-	MOV R2, [flag_neve_exibida]
-	CMP R2, 0
-	JZ mostra_neve_1
-	CMP R2, 1
-	JZ mostra_neve_2
-	CMP R2, 2
-	JZ mostra_neve_1
+verifica_flag_neve_exibida:					; Determina qual estado de animação da neve está ativo, baseado na flag `flag_neve_exibida`
+	MOV R2, [flag_neve_exibida]				; Carrega o valor da flag em R2
+	CMP R2, 0								; Verifica se a flag está no estado 0
+	JZ mostra_neve_1						; Se sim, chama a rotina para exibir neve 1
+	CMP R2, 1								; Verifica se a flag está no estado 1
+	JZ mostra_neve_2						; Se sim, chama a rotina para exibir neve 2
+	CMP R2, 2								; Verifica se a flag está no estado 2
+	JZ mostra_neve_1						; Se sim, retorna para o estado inicial, exibindo neve 1
 
-mostra_neve_1:
-	MOV R1, 0
-	MOV [MOSTRA_ECRA], R1
-	MOV R1, 1
-	MOV [ESCONDE_ECRA], R1
-	MOV R2, 1
-	MOV [flag_neve_exibida], R2
-	JMP fim_rotina_neve
+mostra_neve_1:							
+	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
+	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 0
+	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
+	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 1
+	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
+	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
+	JMP fim_rotina_neve						; Sai da rotina
 
-mostra_neve_2:
-	MOV R1, 0
-	MOV [ESCONDE_ECRA], R1
-	MOV R1, 1
-	MOV [MOSTRA_ECRA], R1
-	MOV R2, 2
-	MOV [flag_neve_exibida], R2
-	JMP fim_rotina_neve
+mostra_neve_2:								
+	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
+	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 0
+	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
+	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 1
+	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
+	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
+	JMP fim_rotina_neve						; Sai da rotina
 
-fim_rotina_neve:
-	POP R2
+fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa principal
+	POP R2									
 	POP R1
 	RET
 
@@ -482,42 +481,42 @@ fim_rotina_neve:
 ; -------------------------------------------------------------------------------------------------------------------
 ;PROCESS SP_inicial_arvore
 anima_arvore:
-	PUSH R1
-	PUSH R2
+	PUSH R1									; Salva o conteúdo de R1
+	PUSH R2									; Salva o conteúdo de R2
 
 verifica_atraso_arvore:
-	CALL atraso_arvore
-	CMP R1, 0
-	JNZ fim_rotina_arvore
+	CALL atraso_arvore						; Chama a rotina para verificar o atraso
+	CMP R1, 0								; Compara o valor do atraso com 0
+	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
 
-verifica_flag_arvore_exibida:
-	MOV R2, [flag_arvore_exibida]
-	CMP R2, 0
-	JZ mostra_arvore_1
-	CMP R2, 1
-	JZ mostra_arvore_2
-	CMP R2, 2
-	JZ mostra_arvore_1
+verifica_flag_arvore_exibida:				; Determina qual estado de animação da árvore está ativo, baseado na flag `flag_arvore_exibida`
+	MOV R2, [flag_arvore_exibida]			; Carrega o valor da flag em R2
+	CMP R2, 0								; Verifica se a flag está no estado 0
+	JZ mostra_arvore_1						; Se sim, chama a rotina para exibir a arvore 1
+	CMP R2, 1								; Verifica se a flag está no estado 1
+	JZ mostra_arvore_2						; Se sim, chama a rotina para exibir o padrão 2
+	CMP R2, 2								; Verifica se a flag está no estado 2
+	JZ mostra_arvore_1						; Se sim, retorna para o padrão inicial, exibindo o padrão 1
 
-mostra_arvore_1:
-	MOV R1, 3
-	MOV [MOSTRA_ECRA], R1
-	MOV R1, 4
-	MOV [ESCONDE_ECRA], R1
-	MOV R2, 1
-	MOV [flag_arvore_exibida], R2
-	JMP fim_rotina_arvore
+mostra_arvore_1:							; Exibe o a árvore 1 e esconde a arvore 2
+	MOV R1, 3								; Seleciona o ecrã 3
+	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 3
+	MOV R1, 4								; Seleciona o ecrã 4
+	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 4
+	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
+	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
+	JMP fim_rotina_arvore					; Sai da rotina
 
-mostra_arvore_2:
-	MOV R1, 3
-	MOV [ESCONDE_ECRA], R1
-	MOV R1, 4
-	MOV [MOSTRA_ECRA], R1
-	MOV R2, 2
-	MOV [flag_arvore_exibida], R2
-	JMP fim_rotina_arvore
+mostra_arvore_2:							; Exibe o a árvore 2 e esconde a arvore 1
+	MOV R1, 3								; Seleciona o ecrã 3
+	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 3
+	MOV R1, 4								; Seleciona o ecrã 4
+	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 4
+	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
+	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
+	JMP fim_rotina_arvore					; Sai da rotina
 
-fim_rotina_arvore:
+fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa principal
 	POP R2
 	POP R1
 	RET
@@ -546,15 +545,15 @@ escreve_pixel:
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
 atraso_neve:
-	PUSH R2
+	PUSH R2							; Salva o conteúdo de R2
 	MOV  R1, [contador_atraso_neve]	; obtém valor do contador do atraso
-	SUB  R1, 1
+	SUB  R1, 1						; Decrementa o contador em 1
 	MOV  [contador_atraso_neve], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso_neve
-	MOV  R2, DELAY
+	JNZ  sai_atraso_neve			; Se o contador não for zero, salta para `sai_atraso_neve`
+	MOV  R2, DELAY					; Carrega o valor de (DELAY) em R2
 	MOV  [contador_atraso_neve], R2	; volta a colocar o valor inicial no contador do atraso
-sai_atraso_neve:
-	POP  R2
+sai_atraso_neve:					
+	POP  R2							; Restaura o valor original de R2
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -564,15 +563,15 @@ sai_atraso_neve:
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
 atraso_arvore:
-	PUSH R2
+	PUSH R2								; Salva o conteúdo de R2
 	MOV  R1, [contador_atraso_arvore]	; obtém valor do contador do atraso
-	SUB  R1, 1
+	SUB  R1, 1							; Decrementa o contador em 1
 	MOV  [contador_atraso_arvore], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso_arvore
-	MOV  R2, DELAY
+	JNZ  sai_atraso_arvore				; Se o contador não for zero, salta para `sai_atraso_arvore`
+	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
 	MOV  [contador_atraso_arvore], R2	; volta a colocar o valor inicial no contador do atraso
 sai_atraso_arvore:
-	POP  R2
+	POP  R2								; Restaura o valor original de R2
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -580,17 +579,17 @@ sai_atraso_arvore:
 ; Argumentos:   R1 - número do som a reproduzir
 ;
 ; -------------------------------------------------------------------------------------------------------------------
-	PUSH R1
-	PUSH R2
+	PUSH R1								; Salva o conteúdo de R1
+	PUSH R2								; Salva o conteúdo de R2
 
 reproduz_som:
-	MOV R2, 100					; define valor a ser usado como volume do som.
-	MOV [PARA_TODOS_SONS], R2	; para todos os sons
-	MOV [SELECTIONA_MIDIA], R1
-	MOV [VOLUME_SOM], R2
-	MOV [INICIA_SOM], R1
+	MOV R2, 100							; define valor a ser usado como volume do som.
+	MOV [PARA_TODOS_SONS], R2			; para todos os sons
+	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
+	MOV [VOLUME_SOM], R2				; Define o volume do som (100%)
+	MOV [INICIA_SOM], R1				; Inicia a reprodução do som especificado
 
-	POP R2
+	POP R2								; Restaura os valores dos registradores
 	POP R1
 	RET
 
@@ -599,63 +598,59 @@ reproduz_som:
 ; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ; -------------------------------------------------------------------------------------------------------------------
 exibe_objeto:
-	PUSH R1
-	PUSH R2
-	PUSH R3
-	PUSH R4
+	PUSH R1								; Salva o valor de R1 na pilha
+	PUSH R2								; Salva o valor de R2 na pilha
+	PUSH R3								; Salva o valor de R3 na pilha
+	PUSH R4								; Salva o valor de R4 na pilha
 
-	MOV R2, [R1]			; obtém o número do ecrã a ser mostrado/ocultado
-	ADD R1, 2				; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
-	MOV R3, [R1]			; obtém estado do objeto
-	
-	CMP R3, 0				; verifica se objeto está ocultado
-	JZ mostra_objeto		; se estiver ocultado, mostra o objeto
-	JMP esconde_objeto		; se estiver sendo exibido, oculta-o
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_objeto					; Caso contrário, oculta o objeto
 
 mostra_objeto:
-	MOV [MOSTRA_ECRA], R2
-	MOV R4, 1
-	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
-	
-	; reproduz efeito sonoro consonte o objeto a ser mostrado
-	CMP R2, 6
-	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
-	CMP R2, 7
-	JZ reproduz_som_giftbox		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
-	CMP R2, 5
-	JZ reproduz_som_arvore		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
-	CMP R2, 2
-	JZ reproduz_som_merryxmas	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
-	
-	JMP fim_exibe_objeto
-
+	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
+	MOV R4, 1							; Define o novo estado como "exibido" (1)
+	MOV [R1], R4						; atualiza estado do objeto para exibido (1)
+	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
+	JZ reproduz_som_painatal			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
+	CMP R2, 7							; Verifica se o objeto corresponde ao ecrã 7 (Giftbox)
+	JZ reproduz_som_giftbox				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
+	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
+	JZ reproduz_som_arvore				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
+	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
+	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
+	JMP fim_exibe_objeto				; Finaliza a rotina
+  
 esconde_objeto:
-	MOV [ESCONDE_ECRA], R2
-	MOV R4, 0
-	MOV [R1], R4				; atualiza estado do objeto para ocultado (0)
-	JMP fim_exibe_objeto
+	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
+	MOV R4, 0							; define o novo estado como "ocultado" (0)
+	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
+	JMP fim_exibe_objeto				; Finaliza a rotina
 
 reproduz_som_giftbox:
-	MOV R4, 4
-	MOV [REPRODUZ_SOM], R4
-	JMP fim_exibe_objeto
+	MOV R4, 4							; Identificador do som para a giftbox
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
 
 reproduz_som_painatal:
-	MOV R4, 3
-	MOV [REPRODUZ_SOM], R4
-	JMP fim_exibe_objeto
+	MOV R4, 3							; Identificador do som para o Pai Natal
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
 
 reproduz_som_arvore:
-	MOV R4, 5
-	MOV [REPRODUZ_SOM], R4
-	JMP fim_exibe_objeto
+	MOV R4, 5							; Identificador do som para a Árvore de Natal
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
 
 reproduz_som_merryxmas:
-	MOV R4, 6
-	MOV [REPRODUZ_SOM], R4
-	JMP fim_exibe_objeto
+	MOV R4, 6							; Identificador do som para o Letreiro Merry Xmas
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
 
-fim_exibe_objeto:
+fim_exibe_objeto:						; Restaura os valores dos registradores
 	POP R4
 	POP R3
 	POP R2
@@ -667,67 +662,69 @@ fim_exibe_objeto:
 ;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
 ; -------------------------------------------------------------------------------------------------------------------
 teclado:
-	PUSH R0
-	PUSH R1
-	PUSH R2
-	PUSH R3
-	PUSH R5
+	PUSH R0								; Salva o valor de R0 na pilha
+	PUSH R1								; Salva o valor de R1 na pilha
+	PUSH R2								; Salva o valor de R2 na pilha
+	PUSH R3								; Salva o valor de R3 na pilha
+	PUSH R5								; Salva o valor de R5 na pilha
 	
-	MOV  R2, TEC_LIN         ; endereço do periférico das linhas
-	MOV  R3, TEC_COL         ; endereço do periférico das colunas
-	MOV  R5, MASCARA		 ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+	MOV  R2, TEC_LIN         			; endereço do periférico das linhas
+	MOV  R3, TEC_COL         			; endereço do periférico das colunas
+	MOV  R5, MASCARA		 			; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
 testa_linha_1:
-	MOV  R1, 1				 ; testar a linha 1
-	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
-	AND  R0, R5				 ; elimina bits para além dos bits 0-3
-	CMP  R0, 0               ; há tecla premida?
-	JNZ  ha_tecla
+	MOV  R1, 1				 			; testar a linha 1
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_2					; Caso contrário, testa a próxima linha
 
 testa_linha_2:
-	MOV  R1, 2				 ; testar a linha 2 
-	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
-	AND  R0, R5				 ; elimina bits para além dos bits 0-3
-	CMP  R0, 0               ; há tecla premida?
-	JNZ  ha_tecla
+	MOV  R1, 2				 			; testar a linha 2 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_3					; Caso contrário, testa a próxima linha
 
 testa_linha_3:
-	MOV  R1, 4				 ; testar a linha 3 
-	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
-	AND  R0, R5				 ; elimina bits para além dos bits 0-3
-	CMP  R0, 0               ; há tecla premida?
-	JNZ  ha_tecla
+	MOV  R1, 4				 			; testar a linha 3 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_4					; Caso contrário, testa a próxima linha
 
 testa_linha_4:
-	MOV  R1, 8				 ; testar a linha 4 
-	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
-	AND  R0, R5				 ; elimina bits para além dos bits 0-3
-	CMP  R0, 0               ; há tecla premida?
-	JNZ  ha_tecla
+	MOV  R1, 8				 			; testar a linha 4 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
 
 nao_ha_tecla:
-	MOV  R1, 0				 ; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
-	MOV  R2, 0               ; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
+	MOV  R1, 0				 			; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
+	MOV  R2, 0               			; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
 	JMP sai_teclado
 
 ha_tecla:
-	MOV  R2, R0              ; houve uma tecla premida
+	MOV  R2, R0              			; houve uma tecla premida
 
 sai_teclado:
-	MOV [linha_carregada], R1	; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma linha premida, 1, 2, 4, 8)
-	MOV  [coluna_carregada], R2	; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma coluna premida, 1, 2, 4, 8)
-								; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
-
+	MOV [linha_carregada], R1			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma linha premida, 1, 2, 4, 8)
+	MOV [coluna_carregada], R2			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma coluna premida, 1, 2, 4, 8)
+										; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
 	POP R5
     POP R3
     POP R2
     POP R1
     POP R0
-    RET                      ; retorna sempre, haja ou não uma tecla carregada
+    RET                      			; retorna sempre, haja ou não uma tecla carregada
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
