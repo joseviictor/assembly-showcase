@@ -626,6 +626,8 @@ mostra_objeto:
 	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
 	CMP R2, 6
 	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz som "ho ho ho"
+	CMP R2, 7
+	JZ reproduz_som_giftbox		; se o objeto a ser mostrado é o pai natal, reproduz som "ho ho ho"
 	JMP fim_exibe_objeto
 
 esconde_objeto:
@@ -634,9 +636,15 @@ esconde_objeto:
 	MOV [R1], R4				; atualiza estado do objeto para ocultado (0)
 	JMP fim_exibe_objeto
 
+reproduz_som_giftbox:
+	MOV R4, 4
+	MOV [REPRODUZ_SOM], R4
+	JMP fim_exibe_objeto
+
 reproduz_som_painatal:
 	MOV R4, 3
 	MOV [REPRODUZ_SOM], R4
+	JMP fim_exibe_objeto
 
 fim_exibe_objeto:
 	POP R4
