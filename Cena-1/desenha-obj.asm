@@ -96,6 +96,18 @@ flag_arvore_exibida:
 contador_atraso:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
 
+estado_giftbox:
+	WORD 7,1			; Variavel que informa o número do ecrã do objeto (7) e se a giftbox está sendo exibida (1) ou ocultada (0)
+
+estado_painatal:
+	WORD 6,1			; Variavel que informa o número do ecrã do objeto (6) se pai natal está sendo exibido (1) ou ocultado (0)
+
+estado_arvore:
+	WORD 5,1			; Variavel que informa o número do ecrã do objeto (5) e se árvore está sendo exibida (1) ou ocultada (0)
+
+estado_merry:
+	WORD 2,1			; Variavel que informa o número do ecrã do objeto (2) e se o letreiro merry xmas está sendo exibido (1) ou ocultado (0)
+
 ; -------------------------------------------------------------------------------------------------------------------
 ; # Tabela dos objetos a escrever nos respetivos ecrãs
 ; -------------------------------------------------------------------------------------------------------------------
@@ -569,6 +581,42 @@ reproduz_som:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
+; Rotina para exibir os objetos no ecrã
+; Argumentos: R1 - número do objeto
+; -------------------------------------------------------------------------------------------------------------------
+exibe_objeto:
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+
+	MOV R2, [R1]			; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2				; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]			; obtém estado do objeto
+	
+	CMP R3, 0				; verifica se objeto está ocultado
+	JZ mostra_objeto		
+	JMP esconde_objeto
+
+mostra_objeto:
+	MOV [MOSTRA_ECRA], R2	
+	MOV R4, 1
+	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
+	JMP fim_exibe_objeto
+
+esconde_objeto:
+	MOV [ESCONDE_ECRA], R2
+	MOV R4, 0
+	MOV [R1], R4				; atualiza estado do objeto para ocultado (0)
+
+fim_exibe_objeto:
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
+	
+; -------------------------------------------------------------------------------------------------------------------
 ; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
 ;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
 ; -------------------------------------------------------------------------------------------------------------------
@@ -657,14 +705,14 @@ verifica_linha_1:
 	CMP R0, 1
 	JNZ verifica_linha_2
 	CMP R1, 1
-	JZ sai_rotina_teclado
+	JZ interruptor_giftbox
 	CMP R1, 2
-	JZ sai_rotina_teclado
+	JZ interruptor_painatal
 	CMP R1, 4
-	JZ sai_rotina_teclado
+	JZ interruptor_arvore
 	MOV R2, 8
 	CMP R1, R2
-	JZ sai_rotina_teclado
+	JZ interruptor_merryxmas
 
 verifica_linha_2:
 	CMP R0, 2
@@ -705,7 +753,28 @@ verifica_linha_4:
 	MOV R2, 8
 	CMP R1, R2						; verifica se tecla premida é F
 	JZ desativa_animacao_arvore
-	
+
+; Ações a executar conforme tecla pressionada
+interruptor_giftbox:
+	MOV R1, estado_giftbox
+	CALL exibe_objeto 
+    JMP sai_rotina_teclado
+
+interruptor_painatal:
+	MOV R1, estado_painatal
+	CALL exibe_objeto 
+    JMP sai_rotina_teclado
+
+interruptor_arvore:
+	MOV R1, estado_arvore
+	CALL exibe_objeto 
+    JMP sai_rotina_teclado
+
+interruptor_merryxmas:
+	MOV R1, estado_merry
+	CALL exibe_objeto 
+    JMP sai_rotina_teclado
+
 ativa_animacao_neve:
 	MOV R1, 1
 	MOV [animacao_neve], R1			; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
@@ -777,4 +846,4 @@ sai_rotina_teclado:
 	POP  R2
 	POP  R1
     POP  R0
-    RET                      
+    RET  
