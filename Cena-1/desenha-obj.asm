@@ -748,7 +748,7 @@ verifica_linha_4:
 	JZ ativa_animacao_neve
 	CMP R1, 2						; verifica se tecla premida é D
 	JZ desativa_animacao_neve
-	CMP R1, 3						; verifica se tecla premida é E
+	CMP R1, 4						; verifica se tecla premida é E
 	JZ ativa_animacao_arvore
 	MOV R2, 8
 	CMP R1, R2						; verifica se tecla premida é F
