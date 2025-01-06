@@ -30,6 +30,7 @@ SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma im
 REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
 
 SELECTIONA_MIDIA		EQU COMANDOS + 48H		; seleciona arquivo de midia (GIF, som ou video), para ser usado nos comandos subsequentes
+REPRODUZ_SOM			EQU COMANDOS + 5AH		; endereço do comando para reproduzir midia selecionada apenas 1x
 INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som especificado, continuamente até ser parado
 VOLUME_SOM				EQU COMANDOS + 4AH		; define volume do som (0-100%)
 PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som especificado
@@ -43,7 +44,7 @@ MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
-DELAY					EQU 0200H				; valor usado para implementar um atraso temporal (0200H = 512)
+DELAY					EQU 00A0H				; valor usado para implementar um atraso temporal (0200H = 512)
 
 ; ####################################################################################################################
 ; # ZONA DE DADOS 
@@ -93,10 +94,10 @@ flag_neve_exibida:
 flag_arvore_exibida:
 	WORD 0				; flag para determinar qual objeto das luzes está sendo exibido (0 - nenhum, 1 ou 2)
 
-contador_atraso:
+contador_atraso_neve:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
 
-contador_atraso_2:
+contador_atraso_arvore:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
 
 estado_giftbox:
@@ -445,7 +446,7 @@ anima_neve:
 	PUSH R2
 
 verifica_atraso_neve:
-	CALL atraso
+	CALL atraso_neve
 	CMP R1, 0
 	JNZ fim_rotina_neve
 
@@ -493,7 +494,7 @@ anima_arvore:
 	PUSH R2
 
 verifica_atraso_arvore:
-	CALL atraso_2
+	CALL atraso_arvore
 	CMP R1, 0
 	JNZ fim_rotina_arvore
 
@@ -552,15 +553,15 @@ escreve_pixel:
 ; Argumentos: Nenhum
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
-atraso:
+atraso_neve:
 	PUSH R2
-	MOV  R1, [contador_atraso]	; obtém valor do contador do atraso
+	MOV  R1, [contador_atraso_neve]	; obtém valor do contador do atraso
 	SUB  R1, 1
-	MOV  [contador_atraso], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso
+	MOV  [contador_atraso_neve], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso_neve
 	MOV  R2, DELAY
-	MOV  [contador_atraso], R2	; volta a colocar o valor inicial no contador do atraso
-sai_atraso:
+	MOV  [contador_atraso_neve], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso_neve:
 	POP  R2
 	RET
 
@@ -570,20 +571,20 @@ sai_atraso:
 ; Argumentos: Nenhum
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
-atraso_2:
+atraso_arvore:
 	PUSH R2
-	MOV  R1, [contador_atraso_2]	; obtém valor do contador do atraso
+	MOV  R1, [contador_atraso_arvore]	; obtém valor do contador do atraso
 	SUB  R1, 1
-	MOV  [contador_atraso_2], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso_2
+	MOV  [contador_atraso_arvore], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso_arvore
 	MOV  R2, DELAY
-	MOV  [contador_atraso_2], R2	; volta a colocar o valor inicial no contador do atraso
-sai_atraso_2:
+	MOV  [contador_atraso_arvore], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso_arvore:
 	POP  R2
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado.
+; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado continuamente até haver um stop.
 ; Argumentos:   R1 - número do som a reproduzir
 ;
 ; -------------------------------------------------------------------------------------------------------------------
@@ -623,12 +624,19 @@ mostra_objeto:
 	MOV [MOSTRA_ECRA], R2	
 	MOV R4, 1
 	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
+	CMP R2, 6
+	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz som "ho ho ho"
 	JMP fim_exibe_objeto
 
 esconde_objeto:
 	MOV [ESCONDE_ECRA], R2
 	MOV R4, 0
 	MOV [R1], R4				; atualiza estado do objeto para ocultado (0)
+	JMP fim_exibe_objeto
+
+reproduz_som_painatal:
+	MOV R4, 3
+	MOV [REPRODUZ_SOM], R4
 
 fim_exibe_objeto:
 	POP R4
