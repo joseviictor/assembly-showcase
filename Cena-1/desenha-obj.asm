@@ -285,17 +285,21 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 inicio:
 	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
 
-    MOV [APAGA_AVISO], R1				; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV [APAGA_ECRA], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 0							; cenário de fundo número 0
-    MOV [SELECIONA_BG], R1				; seleciona o cenário de fundo
-	MOV [SELECTIONA_MIDIA], R1			; seleciona som a reproduzir
-	MOV [INICIA_SOM], R1				; reproduz som
-	MOV R1, 0							; define valor a ser usado como volume do som.
-	MOV [VOLUME_SOM], R1				; define volume som como 100%
-	MOV	R4, giftbox						; endereço da tabela que define o primeiro objeto
-	MOV R7, NUM_ECRAS					; num total de ecrãs a desenhar (NUM_ECRAS + 1)
-    
+    MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+    MOV [APAGA_ECRA], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 0				; cenário de fundo número 0
+    MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
+	MOV [SELECTIONA_MIDIA], R1	; seleciona som a reproduzir
+	MOV [INICIA_SOM], R1	; reproduz som
+	MOV R1, 0				; define valor a ser usado como volume do som.
+	MOV [VOLUME_SOM], R1	; define volume som como 100%
+	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
+	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
+
+	; cria processos. O CALL não invoca a rotina, apenas cria um processo executável
+	;CALL	teclado			; cria o processo teclado
+	;CALL	objeto			; cria o processo objeto
+     
 posição_objeto:
     MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
 	MOV [linha], R1						; guarda LINHA do objeto
@@ -322,8 +326,8 @@ ciclo:									; ciclo das rotinas cooperativas no programa principal
 	verifica_flag_neve:					; Verifica se a animação de neve deve ser executada
 		MOV R3, [animacao_neve]			
 		CMP R3, 0
-		JZ fim_ciclo					; Se a flag de animação de neve for (0), salta para fim_ciclo
-		CALL anima_neve					; executa a animação da neve
+		JZ fim_ciclo
+		CALL anima_neve
 
 	verifica_flag_arvore:				; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_arvore]
@@ -595,7 +599,7 @@ reproduz_som:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Rotina para exibir os objetos no ecrã
-; Argumentos: R1 - número do objeto
+; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ; -------------------------------------------------------------------------------------------------------------------
 exibe_objeto:
 	PUSH R1								; Salva o valor de R1 na pilha
@@ -607,23 +611,23 @@ exibe_objeto:
 	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
 	MOV R3, [R1]						; obtém estado do objeto
 	
-	CMP R3, 0							; verifica se objeto está ocultado
-	JZ mostra_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
-	JMP esconde_objeto					; Caso contrário, oculta o objeto
+	CMP R3, 0				; verifica se objeto está ocultado
+	JZ mostra_objeto		
+	JMP esconde_objeto
 
 mostra_objeto:
-	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
-	MOV R4, 1							; Define o novo estado como "exibido" (1)
-	MOV [R1], R4						; atualiza estado do objeto para exibido (1)
-	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
-	JZ reproduz_som_painatal			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
-	CMP R2, 7							; Verifica se o objeto corresponde ao ecrã 7 (Giftbox)
-	JZ reproduz_som_giftbox				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
-	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
-	JZ reproduz_som_arvore				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
-	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
-	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
-	JMP fim_exibe_objeto				; Finaliza a rotina
+	MOV [MOSTRA_ECRA], R2	
+	MOV R4, 1
+	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
+	CMP R2, 6
+	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
+	CMP R2, 7
+	JZ reproduz_som_giftbox		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
+	CMP R2, 5
+	JZ reproduz_som_arvore		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
+	CMP R2, 2
+	JZ reproduz_som_merryxmas	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
+	JMP fim_exibe_objeto
 
 esconde_objeto:
 	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
@@ -674,31 +678,31 @@ teclado:
 	MOV  R5, MASCARA		 			; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
 testa_linha_1:
-	MOV  R1, 1				 			; testar a linha 1
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_2					; Caso contrário, testa a próxima linha
+	MOV  R1, 1				 ; testar a linha 1
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_2
 
 testa_linha_2:
-	MOV  R1, 2				 			; testar a linha 2 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_3					; Caso contrário, testa a próxima linha
+	MOV  R1, 2				 ; testar a linha 2 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_3
 
 testa_linha_3:
-	MOV  R1, 4				 			; testar a linha 3 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_4					; Caso contrário, testa a próxima linha
+	MOV  R1, 4				 ; testar a linha 3 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_4
 
 testa_linha_4:
 	MOV  R1, 8				 			; testar a linha 4 
