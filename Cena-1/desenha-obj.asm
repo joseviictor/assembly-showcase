@@ -291,7 +291,7 @@ inicio:
     MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
 	MOV [SELECTIONA_MIDIA], R1	; seleciona som a reproduzir
 	MOV [INICIA_SOM], R1	; reproduz som
-	MOV R1, 100				; define valor a ser usado como volume do som.
+	MOV R1, 0				; define valor a ser usado como volume do som.
 	MOV [VOLUME_SOM], R1	; define volume som como 100%
 	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
@@ -338,10 +338,6 @@ ciclo:
 
 fim_ciclo:
 	JMP ciclo
-
-stop_som:
-	MOV R1, 0				; nº do som a parar
-	MOV [PARA_SOM], R1		; para som
 
 fim:
     JMP fim                 ; termina programa
@@ -625,9 +621,13 @@ mostra_objeto:
 	MOV R4, 1
 	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
 	CMP R2, 6
-	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz som "ho ho ho"
+	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
 	CMP R2, 7
-	JZ reproduz_som_giftbox		; se o objeto a ser mostrado é o pai natal, reproduz som "ho ho ho"
+	JZ reproduz_som_giftbox		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
+	CMP R2, 5
+	JZ reproduz_som_arvore		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
+	CMP R2, 2
+	JZ reproduz_som_merryxmas	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
 	JMP fim_exibe_objeto
 
 esconde_objeto:
@@ -643,6 +643,16 @@ reproduz_som_giftbox:
 
 reproduz_som_painatal:
 	MOV R4, 3
+	MOV [REPRODUZ_SOM], R4
+	JMP fim_exibe_objeto
+
+reproduz_som_arvore:
+	MOV R4, 5
+	MOV [REPRODUZ_SOM], R4
+	JMP fim_exibe_objeto
+
+reproduz_som_merryxmas:
+	MOV R4, 6
 	MOV [REPRODUZ_SOM], R4
 	JMP fim_exibe_objeto
 
@@ -815,6 +825,7 @@ interruptor_merryxmas:
 ativa_animacao_neve:
 	MOV R1, 1
 	MOV [animacao_neve], R1			; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	CALL reproduz_som
 	JMP sai_rotina_teclado
 
 desativa_animacao_neve:
@@ -823,6 +834,7 @@ desativa_animacao_neve:
 	MOV [ESCONDE_ECRA], R1			; comando do media center ocultar o ecrã que possui o objeto da neve 1
 	MOV R1, 1
 	MOV [ESCONDE_ECRA], R1			; comando do media center ocultar o ecrã que possui o objeto da neve 2
+	MOV [PARA_TODOS_SONS], R1
 	JMP sai_rotina_teclado
 	
 ativa_animacao_arvore:

@@ -1296,8 +1296,8 @@
     "positionX" : 797,
     "positionY" : 541,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 1372,
-    "simGuiYRelative" : 659,
+    "simGuiXRelative" : 1384,
+    "simGuiYRelative" : 679,
     "simGuiWidth" : 166,
     "simGuiHeight" : 187,
     "columns" : 4,
@@ -1363,8 +1363,8 @@
     "positionX" : 629,
     "positionY" : 229,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 866,
-    "simGuiYRelative" : 65,
+    "simGuiXRelative" : 816,
+    "simGuiYRelative" : 72,
     "simGuiWidth" : 1024,
     "simGuiHeight" : 512,
     "columnAddressNBits" : 6,
@@ -1375,7 +1375,7 @@
     "image paths" : [ "background-img/black bg.png", "background-img/wood bg.png", "background-img/red_bg.png", "background-img/black framed.png" ],
     "sounds/videos settings" : [ {
       "filePathName" : "audio/christmas-spirit.mp3",
-      "relative sound volume" : 1.0,
+      "relative sound volume" : 0.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
@@ -1399,6 +1399,18 @@
       "playAsClip" : false
     }, {
       "filePathName" : "audio/gitfbox opening.mp3",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "audio/tree_efect.mp3",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "audio/merry_xmas.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
