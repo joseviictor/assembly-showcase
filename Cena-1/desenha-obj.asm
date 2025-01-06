@@ -620,6 +620,8 @@ mostra_objeto:
 	MOV [MOSTRA_ECRA], R2	
 	MOV R4, 1
 	MOV [R1], R4				; atualiza estado do objeto para exibido (1)
+	
+	; reproduz efeito sonoro consonte o objeto a ser mostrado
 	CMP R2, 6
 	JZ reproduz_som_painatal	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
 	CMP R2, 7
@@ -628,6 +630,7 @@ mostra_objeto:
 	JZ reproduz_som_arvore		; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
 	CMP R2, 2
 	JZ reproduz_som_merryxmas	; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
+	
 	JMP fim_exibe_objeto
 
 esconde_objeto:
