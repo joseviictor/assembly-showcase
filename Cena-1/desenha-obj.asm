@@ -673,31 +673,31 @@ teclado:
 	MOV  R5, MASCARA		 			; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
 testa_linha_1:
-	MOV  R1, 1				 			; testar a linha 1
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_2					; Caso contrário, testa a próxima linha
+	MOV  R1, 1				 ; testar a linha 1
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_2
 
 testa_linha_2:
-	MOV  R1, 2				 			; testar a linha 2 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_3					; Caso contrário, testa a próxima linha
+	MOV  R1, 2				 ; testar a linha 2 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_3
 
 testa_linha_3:
-	MOV  R1, 4				 			; testar a linha 3 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
-	JMP testa_linha_4					; Caso contrário, testa a próxima linha
+	MOV  R1, 4				 ; testar a linha 3 
+	MOVB [R2], R1            ; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            ; ler do periférico de entrada (colunas)
+	AND  R0, R5				 ; elimina bits para além dos bits 0-3
+	CMP  R0, 0               ; há tecla premida?
+	JNZ  ha_tecla
+	JMP testa_linha_4
 
 testa_linha_4:
 	MOV  R1, 8				 			; testar a linha 4 
