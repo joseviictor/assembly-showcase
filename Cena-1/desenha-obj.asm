@@ -883,7 +883,7 @@ interruptor_painatal:
 interruptor_arvore:
 	MOV R1, estado_arvore				; Carrega o estado atual do objeto da Arvore 
 	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
-    JMP sai_rotina_teclado
+	JMP desativa_animacao_arvore
 
 interruptor_merryxmas:
 	MOV R1, estado_merry				; Carrega o estado atual do objeto Merryxmas
