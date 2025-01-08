@@ -438,11 +438,13 @@ próxima_linha:
 ;
 ; -------------------------------------------------------------------------------------------------------------------
 anima_neve:
+	PUSH R0
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
 
 verifica_atraso_neve:						; Verifica se o atraso necessário para a animação foi atingido
-	CALL atraso_neve						; Chama a rotina para verificar atraso
+	MOV R0, contador_atraso_neve			; endereço da variável que guarda o atraso
+	CALL atraso								; Chama a rotina para verificar atraso
 	CMP R1, 0								; Compara o resultado da verificação
 	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
 
@@ -476,6 +478,7 @@ mostra_neve_2:
 fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa principal
 	POP R2									
 	POP R1
+	POP R0
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -485,11 +488,13 @@ fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa prin
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
 anima_arvore:
+	PUSH R0
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
 
 verifica_atraso_arvore:
-	CALL atraso_arvore						; Chama a rotina para verificar o atraso
+	MOV R0, contador_atraso_arvore			; endereço da variável que guarda o atraso
+	CALL atraso								; Chama a rotina para verificar o atraso
 	CMP R1, 0								; Compara o valor do atraso com 0
 	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
 
@@ -523,6 +528,7 @@ mostra_arvore_2:							; Exibe o a árvore 2 e esconde a arvore 1
 fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa principal
 	POP R2
 	POP R1
+	POP R0
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -532,6 +538,7 @@ fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa pr
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
 anima_merryxmas:
+	PUSH R0
     PUSH R1                                 ; Salva o conteúdo de R1
     PUSH R2                                 ; Salva o conteúdo de R2
     PUSH R4
@@ -555,7 +562,8 @@ anima_merryxmas:
 
 continuar_animacao:
     ; Verifica se o atraso necessário para a animação foi atingido
-    CALL atraso_merryxmas                   ; Chama a rotina para verificar atraso
+	MOV R0, contador_atraso_merryxmas		; endereço da variável que guarda o atraso
+    CALL atraso                   			; Chama a rotina para verificar atraso
     CMP R1, 0                               ; Compara o resultado da verificação
     JNZ fim_rotina_merryxmas                ; Se não for 0 (ainda em atraso), sai da rotina
 
@@ -598,6 +606,7 @@ fim_rotina_merryxmas:                       ; Restaura os registros salvos e ret
     POP R4
     POP R2
     POP R1
+	POP R0
     RET
 
 ; ********************************************************************************************************************
@@ -617,58 +626,21 @@ escreve_pixel:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ATRASO_NEVE - Faz DELAY iterações, para implementar um atraso no tempo,
-;		 de forma não bloqueante.
+; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo, de forma não bloqueante.
 ; Argumentos: Nenhum
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
-atraso_neve:
+atraso:
 	PUSH R2								; Salva o conteúdo de R2
-	MOV  R1, [contador_atraso_neve]		; obtém valor do contador do atraso
+	MOV  R1, [R0]						; obtém valor do contador do atraso
 	SUB  R1, 1							; Decrementa o contador em 1
-	MOV  [contador_atraso_neve], R1		; atualiza valor do contador do atraso
-	JNZ  sai_atraso_neve				; Se o contador não for zero, salta para `sai_atraso_neve`
+	MOV  [R0], R1						; atualiza valor do contador do atraso
+	JNZ  sai_atraso						; Se o contador não for zero, salta para `sai_atraso_neve`
 	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
-	MOV  [contador_atraso_neve], R2		; volta a colocar o valor inicial no contador do atraso
-sai_atraso_neve:					
+	MOV  [R0], R2						; volta a colocar o valor inicial no contador do atraso
+sai_atraso:					
 	POP  R2								; Restaura o valor original de R2
 	RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; ATRASO_ARVORE - Faz DELAY iterações, para implementar um atraso no tempo,
-;		 de forma não bloqueante.
-; Argumentos: Nenhum
-; Saidas:		R1 - Se 0, o atraso chegou ao fim
-; -------------------------------------------------------------------------------------------------------------------
-atraso_arvore:
-	PUSH R2								; Salva o conteúdo de R2
-	MOV  R1, [contador_atraso_arvore]	; obtém valor do contador do atraso
-	SUB  R1, 1							; Decrementa o contador em 1
-	MOV  [contador_atraso_arvore], R1	; atualiza valor do contador do atraso
-	JNZ  sai_atraso_arvore				; Se o contador não for zero, salta para `sai_atraso_arvore`
-	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
-	MOV  [contador_atraso_arvore], R2	; volta a colocar o valor inicial no contador do atraso
-sai_atraso_arvore:
-	POP  R2								; Restaura o valor original de R2
-	RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; ATRASO_MERRYXMAS - Faz DELAY iterações, para implementar um atraso no tempo,
-;		 de forma não bloqueante.
-; Argumentos: Nenhum
-; Saidas:		R1 - Se 0, o atraso chegou ao fim
-; -------------------------------------------------------------------------------------------------------------------
-atraso_merryxmas:
-    PUSH R2                             ; Salva o conteúdo de R2
-    MOV  R1, [contador_atraso_merryxmas] ; obtém valor do contador do atraso
-    SUB  R1, 1                          ; Decrementa o contador em 1
-    MOV  [contador_atraso_merryxmas], R1 ; atualiza valor do contador do atraso
-    JNZ  sai_atraso_merryxmas           ; Se o contador não for zero, salta para `sai_atraso_merryxmas`
-    MOV  R2, 0FH                      ; Carrega o valor de (DELAY) em R2
-    MOV  [contador_atraso_merryxmas], R2 ; reinicia o contador do atraso
-sai_atraso_merryxmas:
-    POP  R2                             ; Restaura o conteúdo de R2
-    RET
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; MOSTRA_OBJETO: Rotina para exibir um ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado),
