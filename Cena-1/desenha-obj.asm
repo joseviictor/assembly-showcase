@@ -666,22 +666,11 @@ reproduz_som:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; Rotina para exibir os objetos no ecrã
+; MOSTRA_OBJETO: Rotina para exibir um ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado),
+; 			   	 e reproduz um efeito sonoro associado ao objeto.	
 ; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
+;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
 ; -------------------------------------------------------------------------------------------------------------------
-exibe_objeto:
-	PUSH R1								; Salva o valor de R1 na pilha
-	PUSH R2								; Salva o valor de R2 na pilha
-	PUSH R3								; Salva o valor de R3 na pilha
-	PUSH R4								; Salva o valor de R4 na pilha
-
-	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
-	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
-	MOV R3, [R1]						; obtém estado do objeto
-	CMP R3, 0							; verifica se objeto está ocultado
-	JZ mostra_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
-	JMP esconde_objeto					; Caso contrário, oculta o objeto
-
 mostra_objeto:
 	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
 	MOV R4, 1							; Define o novo estado como "exibido" (1)
@@ -694,12 +683,6 @@ mostra_objeto:
 	JZ reproduz_som_arvore				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
 	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
 	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
-	JMP fim_exibe_objeto				; Finaliza a rotina
-  
-esconde_objeto:
-	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
-	MOV R4, 0							; define o novo estado como "ocultado" (0)
-	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
 	JMP fim_exibe_objeto				; Finaliza a rotina
 
 reproduz_som_giftbox:
@@ -723,10 +706,17 @@ reproduz_som_merryxmas:
 	JMP fim_exibe_objeto				; Finaliza a rotina
 
 fim_exibe_objeto:						; Restaura os valores dos registradores
-	POP R4
-	POP R3
-	POP R2
-	POP R1
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ESCONDE_OBJETO: Rotina para exibir um objetos no ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado).
+; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
+;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
+; -------------------------------------------------------------------------------------------------------------------
+esconde_objeto:
+	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
+	MOV R4, 0							; define o novo estado como "ocultado" (0)
+	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
 	RET
 	
 ; -------------------------------------------------------------------------------------------------------------------
@@ -817,7 +807,7 @@ verifica_linha_1:
 	CMP R0, 1							; Verifica se a linha carregada é a linha 1
 	JNZ verifica_linha_2				; Se não for, vai para a verificação da linha 2
 	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ interruptor_giftbox				; Faz a animação do giftbox
+	JZ ativa_interruptor_giftbox				; Faz a animação do giftbox
 	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
 	JZ interruptor_painatal				; Faz a animação do pai natal
 	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
@@ -866,28 +856,51 @@ verifica_linha_4:
 	CMP R1, R2							; verifica se tecla premida é F
 	JZ desativa_animacao_arvore			; Desativa a animação da árvore
 
+ativa_interruptor_giftbox:
+	CALL interruptor_giftbox
+
+sai_rotina_teclado:						; Restaura os valores dos registradores
+	POP  R2
+	POP  R1
+    POP  R0
+    RET  
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ações a executar conforme tecla pressionada
 ; -------------------------------------------------------------------------------------------------------------------
 
 interruptor_giftbox:
 	MOV R1, estado_giftbox				; Carrega o estado atual do objeto giftbox
-	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
-    JMP sai_rotina_teclado				; Sai da rotina
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_giftbox					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_giftbox					; Caso contrário, oculta o objeto
+
+mostra_giftbox:
+	CALL mostra_objeto
+    JMP fim_interruptor_giftbox				; Sai da rotina
+
+esconde_giftbox:
+	CALL esconde_objeto
+    JMP fim_interruptor_giftbox				; Sai da rotina
+
+fim_interruptor_giftbox:
+	RET
 
 interruptor_painatal:
 	MOV R1, estado_painatal				; Carrega o estado atual do objeto Pai Natal
-	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
     JMP sai_rotina_teclado				; Sai da rotina
 
 interruptor_arvore:
 	MOV R1, estado_arvore				; Carrega o estado atual do objeto da Arvore 
-	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
 	JMP desativa_animacao_arvore
 
 interruptor_merryxmas:
 	MOV R1, estado_merry				; Carrega o estado atual do objeto Merryxmas
-	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
     JMP sai_rotina_teclado				; Sai da rotina
 
 ativa_animacao_neve:
@@ -959,8 +972,3 @@ para_som:
 	MOV [PARA_TODOS_SONS], R1			; Para todos os sons em execução
 	JMP sai_rotina_teclado				; Sai da rotina
 
-sai_rotina_teclado:						; Restaura os valores dos registradores
-	POP  R2
-	POP  R1
-    POP  R0
-    RET  
