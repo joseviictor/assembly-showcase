@@ -856,6 +856,9 @@ verifica_linha_4:
 	CMP R1, R2							; verifica se tecla premida é F
 	JZ desativa_animacao_arvore			; Desativa a animação da árvore
 
+; -------------------------------------------------------------------------------------------------------------------
+; Ações a executar conforme tecla pressionada
+; -------------------------------------------------------------------------------------------------------------------
 ativa_interruptor_giftbox:
 	CALL interruptor_giftbox
 	JMP sai_rotina_teclado
@@ -872,14 +875,6 @@ ativa_interruptor_merryxmas:
 	CALL interruptor_merryxmas
 	JMP sai_rotina_teclado
 
-sai_rotina_teclado:						; Restaura os valores dos registradores
-	POP  R2
-	POP  R1
-    POP  R0
-    RET  
-; -------------------------------------------------------------------------------------------------------------------
-; Ações a executar conforme tecla pressionada
-; -------------------------------------------------------------------------------------------------------------------
 ativa_animacao_neve:
 	MOV R1, 1							; Define a flag de animação da neve como ativa
 	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
@@ -948,7 +943,13 @@ para_som:
 	MOV R1, 0							; Define o comando para parar todos os sons
 	MOV [PARA_TODOS_SONS], R1			; Para todos os sons em execução
 	JMP sai_rotina_teclado				; Sai da rotina
-	
+
+sai_rotina_teclado:						; Restaura os valores dos registradores
+	POP  R2
+	POP  R1
+    POP  R0
+    RET  
+
 ; -------------------------------------------------------------------------------------------------------------------
 ; INTERRUPTOR_GIFTBOX - Rotina que mostra ou oculta o objeto giftbox, conforme o seu estado atual
 ; Argumentos: Nenhum
@@ -1016,6 +1017,12 @@ mostra_arvore:
 
 esconde_arvore:
 	CALL esconde_objeto
+	MOV R1, 0							; Define a flag de animação da árvore como inativa
+	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV R1, 3							; Definimos o ecra das luzes 1
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
+	MOV R1, 4							; Definimos o ecra das luzes 2
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
     JMP fim_interruptor_arvore				; Sai da rotina
 
 fim_interruptor_arvore:
