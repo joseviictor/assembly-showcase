@@ -539,7 +539,7 @@ escreve_pixel:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ATRASO NEVE - Faz DELAY iterações, para implementar um atraso no tempo,
+; ATRASO_NEVE - Faz DELAY iterações, para implementar um atraso no tempo,
 ;		 de forma não bloqueante.
 ; Argumentos: Nenhum
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
@@ -557,7 +557,7 @@ sai_atraso_neve:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ATRASO ARVORE - Faz DELAY iterações, para implementar um atraso no tempo,
+; ATRASO_ARVORE - Faz DELAY iterações, para implementar um atraso no tempo,
 ;		 de forma não bloqueante.
 ; Argumentos: Nenhum
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim

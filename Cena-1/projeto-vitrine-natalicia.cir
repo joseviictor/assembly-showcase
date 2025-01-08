@@ -609,7 +609,7 @@
     "simGuiXRelative" : 0,
     "simGuiYRelative" : 0,
     "simGuiWidth" : 794,
-    "simGuiHeight" : 830,
+    "simGuiHeight" : 815,
     "clockPeriod" : 500,
     "startAutomatically" : false,
     "simulationMaster" : true,
@@ -638,7 +638,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "../../Cena-1/desenha-obj.asm",
+    "programFilePathName" : "desenha-obj.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1372,45 +1372,45 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 0,
-    "image paths" : [ "../../Cena-1/background-img/black bg.png", "../../Cena-1/background-img/wood bg.png", "../../Cena-1/background-img/red_bg.png", "../../Cena-1/background-img/black framed.png" ],
+    "image paths" : [ "background-img/black bg.png", "background-img/black framed.png", "background-img/red_bg.png", "background-img/wood bg.png" ],
     "sounds/videos settings" : [ {
-      "filePathName" : "../../Cena-1/audio/christmas-spirit.mp3",
-      "relative sound volume" : 0.0,
-      "relative start time" : 0.0,
-      "relative stop time" : 1.0,
-      "playAsClip" : false
-    }, {
-      "filePathName" : "../../Cena-1/audio/jingle-bells.mp3",
+      "filePathName" : "audio/christmas-spirit.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "../../Cena-1/audio/we-wish-you-a-merry-christmas-happy-remix-background-intro-theme-277943 (1).mp3",
+      "filePathName" : "audio/jingle-bells.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "../../Cena-1/audio/santa-claus-laughing-252035.mp3",
+      "filePathName" : "audio/we-wish-you-a-merry-christmas-happy-remix-background-intro-theme-277943 (1).mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "../../Cena-1/audio/gitfbox opening.mp3",
+      "filePathName" : "audio/santa-claus-laughing-252035.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "../../Cena-1/audio/tree_efect.mp3",
+      "filePathName" : "audio/gitfbox opening.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "../../Cena-1/audio/merry_xmas.mp3",
+      "filePathName" : "audio/tree_efect.mp3",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "audio/merry_xmas.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
