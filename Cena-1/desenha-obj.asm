@@ -88,6 +88,9 @@ animacao_neve:			; flag para determinar se é para executar animação da neve
 animacao_arvore:		; flag para determinar se é para executar animação da árvore
 	WORD 0
 
+animacao_merryxmas:		; flag para determinar se é para executar animação do letreiro merryxmas
+	WORD 0
+
 flag_neve_exibida:
 	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0 - nenhum, 1 ou 2)
 
@@ -100,6 +103,9 @@ contador_atraso_neve:
 contador_atraso_arvore:
 	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
 
+contador_atraso_merryxmas:
+	WORD 0FH			; contador usado para gerar o atraso entre os movimentos dos objetos
+	
 estado_giftbox:
 	WORD 7,1			; Variavel que informa o número do ecrã do objeto (7) e se a giftbox está sendo exibida (1) ou ocultada (0)
 
@@ -201,12 +207,12 @@ luzes2:					; tabela que define o objeto luzes da árvore 2 (cor, largura, pixel
 	WORD  0000H, 0000H, 0000H,0F903H, 0000H, 0000H, 0000H,0FFC0H
 
 merry_xmas:				; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
-	WORD  24, 9, 49, 5 	; linha,coluna,largura,altura
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH
-	WORD  0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H
-	WORD  0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H
+	WORD  24, 4, 59, 5 	; linha,coluna,largura,altura
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
 
 neve1:					; tabela que define o objeto neve 1 (cor, largura, pixels)
 	WORD  0, 0, 64, 32 	; linha,coluna,largura,altura
@@ -289,10 +295,6 @@ inicio:
   	MOV [APAGA_ECRA], R1					; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0								; cenário de fundo número 0
   	MOV [SELECIONA_BG], R1					; seleciona o cenário de fundo
-	MOV [SELECTIONA_MIDIA], R1				; seleciona som a reproduzir
-	MOV [INICIA_SOM], R1					; reproduz som
-	MOV R1, 0								; define valor a ser usado como volume do som.
-	MOV [VOLUME_SOM], R1					; define volume som como 100%
 	MOV	R4, giftbox							; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS						; num total de ecrãs a desenhar (NUM_ECRAS + 1)
 
@@ -311,8 +313,14 @@ ciclo:										; ciclo das rotinas cooperativas no programa principal
 	verifica_flag_arvore:					; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_arvore]			; Carrega o estado da flag de animação da árvore
 		CMP R3, 0							; Compara o estado com 0
-		JZ fim_ciclo						; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		JZ verifica_flag_merryxmas						; Se a flag de animação da árvore for (0), salta para fim_ciclo
 		CALL anima_arvore					; Chama a rotina da animação da neve
+
+	verifica_flag_merryxmas:				; Verifica se a animação da árvore deve ser executada
+		MOV R3, [animacao_merryxmas]		; Carrega o estado da flag de animação da árvore
+		CMP R3, 0							; Compara o estado com 0
+		JZ fim_ciclo						; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		CALL anima_merryxmas				; Chama a rotina da animação da neve
 
 fim_ciclo:
 	JMP ciclo				 				; volta para o início do loop principal
@@ -429,7 +437,6 @@ próxima_linha:
 ; Argumentos:   Nenhum
 ;
 ; -------------------------------------------------------------------------------------------------------------------
-;PROCESS SP_inicial_neve
 anima_neve:
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
@@ -477,7 +484,6 @@ fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa prin
 ; Argumentos:  Nenhum
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
-;PROCESS SP_inicial_arvore
 anima_arvore:
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
@@ -520,78 +526,79 @@ fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa pr
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ANIMA_MERRYXMAS - Executa uma animação simples do letreiro merryxmas, alternando entre 
+; ANIMA_MERRYXMAS - Executa uma animação simples do letreiro merry xmas, alternando entre 
 ; 				 objetos de luzes de natal de forma não bloqueante
 ; Argumentos:  Nenhum
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
-;PROCESS SP_inicial_arvore
 anima_merryxmas:
-	PUSH R1									; Salva o conteúdo de R1
-	PUSH R2									; Salva o conteúdo de R2
-	PUSH R3
-	PUSH R4
-	PUSH R5
-	PUSH R6
-	PUSH R7
+    PUSH R1                                 ; Salva o conteúdo de R1
+    PUSH R2                                 ; Salva o conteúdo de R2
+    PUSH R4
+    PUSH R7
+    PUSH R8                                 ; Salva o conteúdo de R8 (direção)
+    PUSH R9                                 ; Salva o conteúdo de R9 (estado da animação)
+    PUSH R10                                ; Salva o conteúdo de R10 (posição inicial)
 
-	MOV R3, 2								; num do ecrã do merryxmas
-	MOV [SELECIONA_ECRA], R3				; seleciona ecrã merryxmas
-	MOV R4, merry_xmas						; endereço da tabela que define o objeto
-	MOV R7, 10	
+    ; Verifica se a animação já foi inicializada
+    CMP R10, 0
+    JNZ continuar_animacao
 
-posição_objeto_merryxmas:
-    MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1						; guarda LINHA do objeto
-	ADD R4, 2							; avança para a 2ª palavra da tabela que define o objeto
-	
-	MOV R2, [R4]						; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	ADD R2, 2
-	MOV [coluna], R2					; guarda coluna do objeto
-	ADD R4, 2							; avança para a 3ª palavra da tabela que define o objeto
-	
-	MOV R5, [R4]						; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5					; guarda largura
-	ADD R4, 2							; avança para a 4ª palavra da tabela que define o objeto
-	
-	MOV R6, [R4]						; obtém a altura do objeto
-	MOV [altura], R6					; guarda a altura do objeto
-	ADD R4, 2							; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
+    ; Inicializa a animação
+    MOV R7, 5                               ; num total de colunas a mover
+    MOV R8, 1                               ; 1 para mover para a direita, -1 para mover para a esquerda
+    MOV R4, merry_xmas
+    ADD R4, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
+    MOV R10, [R4]                           ; salva a posição inicial da coluna
+    MOV [R4], R10                           ; inicializa a posição da coluna
+    MOV R9, 0                               ; inicializa o estado da animação
 
-reinicia_coluna_merryxmas:       			; desenha pixel na linha e coluna do objeto a partir da tabela
-	MOV R2, [coluna]			; reinicia a coluna para cada linha
+continuar_animacao:
+    ; Verifica se o atraso necessário para a animação foi atingido
+    CALL atraso_merryxmas                   ; Chama a rotina para verificar atraso
+    CMP R1, 0                               ; Compara o resultado da verificação
+    JNZ fim_rotina_merryxmas                ; Se não for 0 (ainda em atraso), sai da rotina
 
-desenha_pixel_merryxmas:
-	MOV	R3, [R4]				; obtém a cor do pixel do objeto
-	CALL escreve_pixel			; escreve cada pixel do objeto
+    MOV R1, 2                               ; num do ecrã do merryxmas
+    MOV [SELECIONA_ECRA], R1                ; seleciona ecrã merryxmas
+    MOV R4, merry_xmas                      ; endereço da tabela que define o objeto merryxmas
+    CALL desenha_objeto
 
-próxima_coluna_merryxmas:
-	ADD	R4, 2					; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               	; próxima coluna
-    SUB R5, 1					; menos uma coluna para tratar
-    JNZ desenha_pixel_merryxmas      		; continua até percorrer toda a largura do objeto
+    MOV R4, merry_xmas
+    ADD R4, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
+    MOV R2, [R4]                            ; obtem num da coluna do objeto
+    ADD R2, R8                              ; incrementa ou decrementa coluna em 1 pixel
+    MOV [R4], R2                            ; guarda novo número da coluna
+    SUB R7, 1                               ; decrementa o número de colunas a mover
+    JNZ fim_rotina_merryxmas                ; se ainda há colunas a mover, sai da rotina
 
-próxima_linha_merryxmas:
-	ADD R1, 1					; próxima linha
-	MOV R5, [largura]			; reinicia a largura do objeto
-	SUB R6, 1					; menos uma linha para tratar
-	JNZ reinicia_coluna_merryxmas			; continua até percorrer todas as linhas
+    ; Inverte a direção e ajusta o número de colunas a mover
+    CMP R9, 0
+    JZ move_esquerda                        ; se estava movendo para a direita, agora move para a esquerda
+    CMP R9, 1
+    JZ move_direita                         ; se estava movendo para a esquerda, agora move para a direita
 
-atualiza_coluna_merryxmas:
-	SUB R7, 1					
-	JNZ posição_objeto_merryxmas			; continua até percorrer todas as colunas
-	
+move_esquerda:
+    MOV R7, 10                              ; reinicia o número de colunas a mover para 10
+    NEG R8                                  ; inverte a direção para a esquerda
+    MOV R9, 1                               ; atualiza o estado da animação para mover para a esquerda
+    JMP fim_rotina_merryxmas                ; sai da rotina para permitir que outras rotinas sejam executadas
 
-fim_rotina_merryxmas:							; Restaura os registros salvos e retorna ao programa principal
-	POP R7
-	POP R6
-	POP R5
-	POP R4
-	POP R3
-	POP R2
-	POP R1
-	RET
+move_direita:
+    MOV R7, 10                              ; reinicia o número de colunas a mover para 10
+    NEG R8                                  ; inverte a direção para a direita
+    MOV R9, 0                               ; atualiza o estado da animação para mover para a direita
+    JMP fim_rotina_merryxmas                ; sai da rotina para permitir que outras rotinas sejam executadas
 
+fim_rotina_merryxmas:                       ; Restaura os registros salvos e retorna ao programa principal
+    POP R10
+    POP R9
+    POP R8
+    POP R7
+    POP R4
+    POP R2
+    POP R1
+    RET
 
 ; ********************************************************************************************************************
 ; Rotinas Auxiliares 
@@ -646,23 +653,22 @@ sai_atraso_arvore:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado continuamente até haver um stop.
-; Argumentos:   R1 - número do som a reproduzir
-;
+; ATRASO_MERRYXMAS - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
-	PUSH R1								; Salva o conteúdo de R1
-	PUSH R2								; Salva o conteúdo de R2
-
-reproduz_som:
-	MOV R2, 100							; define valor a ser usado como volume do som.
-	MOV [PARA_TODOS_SONS], R2			; para todos os sons
-	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
-	MOV [VOLUME_SOM], R2				; Define o volume do som (100%)
-	MOV [INICIA_SOM], R1				; Inicia a reprodução do som especificado
-
-	POP R2								; Restaura os valores dos registradores
-	POP R1
-	RET
+atraso_merryxmas:
+    PUSH R2                             ; Salva o conteúdo de R2
+    MOV  R1, [contador_atraso_merryxmas] ; obtém valor do contador do atraso
+    SUB  R1, 1                          ; Decrementa o contador em 1
+    MOV  [contador_atraso_merryxmas], R1 ; atualiza valor do contador do atraso
+    JNZ  sai_atraso_merryxmas           ; Se o contador não for zero, salta para `sai_atraso_merryxmas`
+    MOV  R2, 0FH                      ; Carrega o valor de (DELAY) em R2
+    MOV  [contador_atraso_merryxmas], R2 ; reinicia o contador do atraso
+sai_atraso_merryxmas:
+    POP  R2                             ; Restaura o conteúdo de R2
+    RET
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; MOSTRA_OBJETO: Rotina para exibir um ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado),
@@ -846,14 +852,14 @@ verifica_linha_4:
 	CMP R0, R2							; verifica se nenhuma tecla foi premida na linha 4
 	JNZ sai_rotina_teclado				; Se não for, sai da rotina
 	CMP R1, 1							; verifica se tecla premida é C
-	JZ ativa_animacao_neve				; ativa a animação da árvore
+	JZ liga_animacao_neve_e_arvore		; ativa a animação da árvore
 	CMP R1, 2							; verifica se tecla premida é D
-	JZ desativa_animacao_neve			; Desativa a animação da neve
+	JZ desliga_animacao_neve_e_arvore	; Desativa a animação da neve
 	CMP R1, 4							; verifica se tecla premida é E
-	JZ ativa_animacao_arvore			; ativa a animação da árvore
+	JZ liga_animacao_merryxmas			; ativa a animação da árvore
 	MOV R2, 8							; Prepara o valor 8 para comparação
 	CMP R1, R2							; verifica se tecla premida é F
-	JZ desativa_animacao_arvore			; Desativa a animação da árvore
+	JZ desliga_animacao_merryxmas			; Desativa a animação da árvore
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ações a executar conforme tecla pressionada
@@ -874,34 +880,22 @@ ativa_interruptor_merryxmas:
 	CALL interruptor_merryxmas
 	JMP sai_rotina_teclado
 
-ativa_animacao_neve:
-	MOV R1, 1							; Define a flag de animação da neve como ativa
-	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	CALL reproduz_som					; Chama a rotina para reproduzir som
-	JMP sai_rotina_teclado				; Sai da rotina
+liga_animacao_neve_e_arvore:
+	CALL ativa_animacao_neve_e_arvore
+	JMP sai_rotina_teclado
 
-desativa_animacao_neve:
-	MOV R1, 0							; Define a flag de animação da neve como inativa
-	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
-	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 1
-	MOV R1, 1							; Definimos o ecra da neve
-	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
-	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
-	JMP sai_rotina_teclado				; Sai da rotina
-	
-ativa_animacao_arvore:
-	MOV R1, 1							; Define a flag de animação da árvore como ativa
-	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	JMP sai_rotina_teclado				; Sai da rotina
+desliga_animacao_neve_e_arvore:
+	CALL desativa_animacao_neve_e_arvore
+	JMP sai_rotina_teclado
 
-desativa_animacao_arvore:
-	MOV R1, 0							; Define a flag de animação da árvore como inativa
-	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
-	MOV R1, 3							; Definimos o ecra das luzes 1
-	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
-	MOV R1, 4							; Definimos o ecra das luzes 2
-	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
-	JMP sai_rotina_teclado				; Sai da rotina
+liga_animacao_merryxmas:
+	CALL desativa_animacao_neve_e_arvore
+	CALL ativa_animacao_merryxmas
+	JMP sai_rotina_teclado
+
+desliga_animacao_merryxmas:
+	CALL desativa_animacao_merryxmas
+	JMP sai_rotina_teclado
 
 seleciona_imagem_bg_0:					
 	MOV R1, 0							; Define a 1º imagem de fundo
@@ -924,18 +918,18 @@ seleciona_imagem_bg_3:
 	JMP sai_rotina_teclado				; Sai da rotina
 
 reproduz_som_0:
-	MOV R1, 0							; Seleciona o 1º som
-	CALL reproduz_som					; Chama a rotina para reproduzir som
+	MOV R1, 0							; Definimos o som zero para ser reproduzido
+	CALL reproduz_som
 	JMP sai_rotina_teclado				; Sai da rotina
 
 reproduz_som_1:
-	MOV R1, 1							; Seleciona o 2º som
-	CALL reproduz_som					; Chama a rotina para reproduzir som
+	MOV R1, 1							; Definimos o som zero para ser reproduzido
+	CALL reproduz_som
 	JMP sai_rotina_teclado				; Sai da rotina
 
 reproduz_som_2:
-	MOV R1, 2							; Seleciona o 3º som
-	CALL reproduz_som					; Chama a rotina para reproduzir som
+	MOV R1, 2							; Definimos o som zero para ser reproduzido
+	CALL reproduz_som
 	JMP sai_rotina_teclado				; Sai da rotina
 
 para_som:
@@ -947,7 +941,18 @@ sai_rotina_teclado:						; Restaura os valores dos registradores
 	POP  R2
 	POP  R1
     POP  R0
-    RET  
+    RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado continuamente até haver um stop.
+; Argumentos:   R1 - número do som a reproduzir
+; -------------------------------------------------------------------------------------------------------------------	
+reproduz_som:
+	PUSH R1
+	MOV [PARA_TODOS_SONS], R1		; Para todos os sons em execução
+	MOV [INICIA_SOM], R1				; Inicia a reprodução do som especificado
+	POP R1
+	RFE
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; INTERRUPTOR_GIFTBOX - Rotina que mostra ou oculta o objeto giftbox, conforme o seu estado atual
@@ -1049,4 +1054,69 @@ esconde_merryxmas:
     JMP fim_interruptor_merryxmas				; Sai da rotina
 
 fim_interruptor_merryxmas:
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ativa_animacao_neve_e_arvore - Rotina que ativa a animação da neve e luzes a piscar
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+ativa_animacao_neve_e_arvore:
+	PUSH R1
+	PUSH R2
+	MOV R1, 0							; Define o ecra da neve
+	MOV R1, 1							; Define a flag de animação da neve como ativa
+	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	MOV R2, 100							; Define o volume do som (100%)
+	MOV R1, 7							; Definimos o som zero para ser reproduzido
+	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
+	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
+	MOV [VOLUME_SOM], R2				; Define o volume do som
+	MOV [INICIA_SOM], R1				; Comando do media center para reproduzir o som zero
+	
+	POP R2
+	POP R1
+	RFE
+
+; -------------------------------------------------------------------------------------------------------------------
+; desativa_animacao_neve_e_arvore - Rotina que desativa as animações da neve e luzes a piscar
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+desativa_animacao_neve_e_arvore:
+	PUSH R1
+	
+	MOV R1, 0							; Define a flag de animação da neve como inativa
+	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	
+	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 1
+	MOV R1, 1							; Definimos o ecra da neve
+	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
+	MOV R1, 3								; Definimos o ecra das luzes 1
+	MOV [ESCONDE_ECRA], R1					; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
+	MOV R1, 4								; Definimos o ecra das luzes 2
+	MOV [ESCONDE_ECRA], R1					; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
+	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
+	
+	POP R1
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ativa_animacao_merryxmas - Rotina que ativa a animação do letreiro merry xmas
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+ativa_animacao_merryxmas:
+	PUSH R1
+	MOV R1, 1							; Define a flag de animação da árvore como ativa
+	MOV [animacao_merryxmas], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	POP R1
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; desativa_animacao_merryxmas - Rotina que desativa a animação do letreiro merry xmas
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+desativa_animacao_merryxmas:
+	MOV R1, 0							; Define a flag de animação da árvore como ativa
+	MOV [animacao_merryxmas], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
 	RET
