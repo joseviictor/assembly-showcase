@@ -295,23 +295,6 @@ inicio:
 	MOV [VOLUME_SOM], R1					; define volume som como 100%
 	MOV	R4, giftbox							; endereço da tabela que define o primeiro objeto
 	MOV R7, NUM_ECRAS						; num total de ecrãs a desenhar (NUM_ECRAS + 1)
-     
-posição_objeto:
-    MOV R1, [R4]							; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1							; guarda LINHA do objeto
-	ADD R4, 2								; avança para a 2ª palavra da tabela que define o objeto
-	
-	MOV R2, [R4]							; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	MOV [coluna], R2						; guarda coluna do objeto
-	ADD R4, 2								; avança para a 3ª palavra da tabela que define o objeto
-	
-	MOV R5, [R4]							; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5						; guarda largura
-	ADD R4, 2								; avança para a 4ª palavra da tabela que define o objeto
-	
-	MOV R6, [R4]							; obtém a altura do objeto
-	MOV [altura], R6						; guarda a altura do objeto
-	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 	CALL desenha_objetos					; Chama a rotina para desenhar o objeto
 
@@ -345,8 +328,7 @@ fim:
 ; Rotina para desenho inicial dos objetos
 ; ********************************************************************************************************************
 ; -------------------------------------------------------------------------------------------------------------------
-; DESENHA_OBJETOS - Desenha um objeto na linha e coluna indicadas
-;			    com a forma e cor definidas na tabela indicada.
+; DESENHA_OBJETOS - Desenha todos os objetos da cena nas respetivas linhas, colunas e com a forma e cor definidas na tabela indicada.
 ; Argumentos:   R1 - linha
 ;               R2 - coluna
 ;               R4 - tabela que define o objeto
@@ -361,6 +343,23 @@ desenha_objetos:
 	PUSH R6
 	PUSH R7
 	PUSH R8									; Salva os registros usados para restaurar no final
+
+	posição_objeto:
+    MOV R1, [R4]							; obtém a linha do objeto, será decrementada para controlo de fluxo
+	MOV [linha], R1							; guarda LINHA do objeto
+	ADD R4, 2								; avança para a 2ª palavra da tabela que define o objeto
+	
+	MOV R2, [R4]							; obtém a coluna do objeto, será decrementada para controlo de fluxo
+	MOV [coluna], R2						; guarda coluna do objeto
+	ADD R4, 2								; avança para a 3ª palavra da tabela que define o objeto
+	
+	MOV R5, [R4]							; obtém a largura do objeto - será decrementada para controlo de fluxo
+	MOV [largura], R5						; guarda largura
+	ADD R4, 2								; avança para a 4ª palavra da tabela que define o objeto
+	
+	MOV R6, [R4]							; obtém a altura do objeto
+	MOV [altura], R6						; guarda a altura do objeto
+	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7				; seleciona ecrã
@@ -520,6 +519,80 @@ fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa pr
 	POP R2
 	POP R1
 	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ANIMA_MERRYXMAS - Executa uma animação simples do letreiro merryxmas, alternando entre 
+; 				 objetos de luzes de natal de forma não bloqueante
+; Argumentos:  Nenhum
+;				
+; -------------------------------------------------------------------------------------------------------------------
+;PROCESS SP_inicial_arvore
+anima_merryxmas:
+	PUSH R1									; Salva o conteúdo de R1
+	PUSH R2									; Salva o conteúdo de R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
+	PUSH R7
+
+	MOV R3, 2								; num do ecrã do merryxmas
+	MOV [SELECIONA_ECRA], R3				; seleciona ecrã merryxmas
+	MOV R4, merry_xmas						; endereço da tabela que define o objeto
+	MOV R7, 10	
+
+posição_objeto_merryxmas:
+    MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
+	MOV [linha], R1						; guarda LINHA do objeto
+	ADD R4, 2							; avança para a 2ª palavra da tabela que define o objeto
+	
+	MOV R2, [R4]						; obtém a coluna do objeto, será decrementada para controlo de fluxo
+	ADD R2, 2
+	MOV [coluna], R2					; guarda coluna do objeto
+	ADD R4, 2							; avança para a 3ª palavra da tabela que define o objeto
+	
+	MOV R5, [R4]						; obtém a largura do objeto - será decrementada para controlo de fluxo
+	MOV [largura], R5					; guarda largura
+	ADD R4, 2							; avança para a 4ª palavra da tabela que define o objeto
+	
+	MOV R6, [R4]						; obtém a altura do objeto
+	MOV [altura], R6					; guarda a altura do objeto
+	ADD R4, 2							; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
+
+reinicia_coluna_merryxmas:       			; desenha pixel na linha e coluna do objeto a partir da tabela
+	MOV R2, [coluna]			; reinicia a coluna para cada linha
+
+desenha_pixel_merryxmas:
+	MOV	R3, [R4]				; obtém a cor do pixel do objeto
+	CALL escreve_pixel			; escreve cada pixel do objeto
+
+próxima_coluna_merryxmas:
+	ADD	R4, 2					; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+    ADD R2, 1               	; próxima coluna
+    SUB R5, 1					; menos uma coluna para tratar
+    JNZ desenha_pixel_merryxmas      		; continua até percorrer toda a largura do objeto
+
+próxima_linha_merryxmas:
+	ADD R1, 1					; próxima linha
+	MOV R5, [largura]			; reinicia a largura do objeto
+	SUB R6, 1					; menos uma linha para tratar
+	JNZ reinicia_coluna_merryxmas			; continua até percorrer todas as linhas
+
+atualiza_coluna_merryxmas:
+	SUB R7, 1					
+	JNZ posição_objeto_merryxmas			; continua até percorrer todas as colunas
+	
+
+fim_rotina_merryxmas:							; Restaura os registros salvos e retorna ao programa principal
+	POP R7
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
+
 
 ; ********************************************************************************************************************
 ; Rotinas Auxiliares 
