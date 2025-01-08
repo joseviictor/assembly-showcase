@@ -609,7 +609,7 @@
     "simGuiXRelative" : 0,
     "simGuiYRelative" : 0,
     "simGuiWidth" : 794,
-    "simGuiHeight" : 815,
+    "simGuiHeight" : 830,
     "clockPeriod" : 500,
     "startAutomatically" : false,
     "simulationMaster" : true,

@@ -667,7 +667,7 @@ reproduz_som:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; MOSTRA_OBJETO: Rotina para exibir um ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado),
-; 			   	 e reproduz um efeito sonoro associado ao objeto.	
+; 			   	 e reproduz um efeito sonoro associado ao objeto. Além disso, atualizada o estado do objeto para 1 - exibido.	
 ; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
 ; -------------------------------------------------------------------------------------------------------------------
@@ -709,7 +709,7 @@ fim_exibe_objeto:						; Restaura os valores dos registradores
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ESCONDE_OBJETO: Rotina para exibir um objetos no ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado).
+; ESCONDE_OBJETO: Rotina para ocultar um ecrã e seu respetivo objeto, atualizando o estado do objeto para 0 - oculto.
 ; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
 ;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
 ; -------------------------------------------------------------------------------------------------------------------
@@ -789,7 +789,7 @@ sai_teclado:
     RET                      			; retorna sempre, haja ou não uma tecla carregada
 
 ; -------------------------------------------------------------------------------------------------------------------
-; AÇÃO TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
+; ACOES_TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
 ;			ou desativar animações, reproduzir som, selecionar imagem de fundo ou parar todos os sons, entre outras.
 ; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
@@ -807,14 +807,14 @@ verifica_linha_1:
 	CMP R0, 1							; Verifica se a linha carregada é a linha 1
 	JNZ verifica_linha_2				; Se não for, vai para a verificação da linha 2
 	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ ativa_interruptor_giftbox				; Faz a animação do giftbox
+	JZ ativa_interruptor_giftbox		; Faz a animação do giftbox
 	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ interruptor_painatal				; Faz a animação do pai natal
+	JZ ativa_interruptor_painatal		; Faz a animação do pai natal
 	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
-	JZ interruptor_arvore				; Faz a animação da arvore
+	JZ ativa_interruptor_arvore			; Faz a animação da arvore
 	MOV R2, 8							; Prepara o valor 8 para comparação
 	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
-	JZ interruptor_merryxmas			; Faz a animação do merryxmas
+	JZ ativa_interruptor_merryxmas		; Faz a animação do merryxmas
 
 verifica_linha_2:
 	CMP R0, 2							; Verifica se a linha carregada é a linha 2
@@ -858,6 +858,19 @@ verifica_linha_4:
 
 ativa_interruptor_giftbox:
 	CALL interruptor_giftbox
+	JMP sai_rotina_teclado
+
+ativa_interruptor_painatal:
+	CALL interruptor_painatal
+	JMP sai_rotina_teclado
+
+ativa_interruptor_arvore:
+	CALL interruptor_arvore
+	JMP sai_rotina_teclado
+
+ativa_interruptor_merryxmas:
+	CALL interruptor_merryxmas
+	JMP sai_rotina_teclado
 
 sai_rotina_teclado:						; Restaura os valores dos registradores
 	POP  R2
@@ -867,42 +880,6 @@ sai_rotina_teclado:						; Restaura os valores dos registradores
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ações a executar conforme tecla pressionada
 ; -------------------------------------------------------------------------------------------------------------------
-
-interruptor_giftbox:
-	MOV R1, estado_giftbox				; Carrega o estado atual do objeto giftbox
-	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
-	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
-	MOV R3, [R1]						; obtém estado do objeto
-	CMP R3, 0							; verifica se objeto está ocultado
-	JZ mostra_giftbox					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
-	JMP esconde_giftbox					; Caso contrário, oculta o objeto
-
-mostra_giftbox:
-	CALL mostra_objeto
-    JMP fim_interruptor_giftbox				; Sai da rotina
-
-esconde_giftbox:
-	CALL esconde_objeto
-    JMP fim_interruptor_giftbox				; Sai da rotina
-
-fim_interruptor_giftbox:
-	RET
-
-interruptor_painatal:
-	MOV R1, estado_painatal				; Carrega o estado atual do objeto Pai Natal
-	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
-    JMP sai_rotina_teclado				; Sai da rotina
-
-interruptor_arvore:
-	MOV R1, estado_arvore				; Carrega o estado atual do objeto da Arvore 
-	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
-	JMP desativa_animacao_arvore
-
-interruptor_merryxmas:
-	MOV R1, estado_merry				; Carrega o estado atual do objeto Merryxmas
-	CALL mostra_objeto 					; Chama a rotina para exibir o objeto
-    JMP sai_rotina_teclado				; Sai da rotina
-
 ativa_animacao_neve:
 	MOV R1, 1							; Define a flag de animação da neve como ativa
 	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
@@ -971,4 +948,99 @@ para_som:
 	MOV R1, 0							; Define o comando para parar todos os sons
 	MOV [PARA_TODOS_SONS], R1			; Para todos os sons em execução
 	JMP sai_rotina_teclado				; Sai da rotina
+	
+; -------------------------------------------------------------------------------------------------------------------
+; INTERRUPTOR_GIFTBOX - Rotina que mostra ou oculta o objeto giftbox, conforme o seu estado atual
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+interruptor_giftbox:
+	MOV R1, estado_giftbox				; Carrega o estado atual do objeto giftbox
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_giftbox					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_giftbox					; Caso contrário, oculta o objeto
 
+mostra_giftbox:
+	CALL mostra_objeto
+    JMP fim_interruptor_giftbox				; Sai da rotina
+
+esconde_giftbox:
+	CALL esconde_objeto
+    JMP fim_interruptor_giftbox				; Sai da rotina
+
+fim_interruptor_giftbox:
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; INTERRUPTOR_PAINATAL - Rotina que mostra ou oculta o objeto do pai natal, conforme o seu estado atual
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+interruptor_painatal:
+	MOV R1, estado_painatal				; Carrega o estado atual do objeto Pai Natal
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_painatal					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_painatal					; Caso contrário, oculta o objeto
+
+mostra_painatal:
+	CALL mostra_objeto
+    JMP fim_interruptor_painatal				; Sai da rotina
+
+esconde_painatal:
+	CALL esconde_objeto
+    JMP fim_interruptor_painatal				; Sai da rotina
+
+fim_interruptor_painatal:
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; INTERRUPTOR_ARVORE - Rotina que mostra ou oculta o objeto da árvore, conforme o seu estado atual
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+interruptor_arvore:
+	MOV R1, estado_arvore				; Carrega o estado atual do objeto da Arvore 
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_arvore					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_arvore					; Caso contrário, oculta o objeto
+
+mostra_arvore:
+	CALL mostra_objeto
+    JMP fim_interruptor_arvore				; Sai da rotina
+
+esconde_arvore:
+	CALL esconde_objeto
+    JMP fim_interruptor_arvore				; Sai da rotina
+
+fim_interruptor_arvore:
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; INTERRUPTOR_MERRYXMAS - Rotina que mostra ou oculta o letreiro "MERRY XMAS", conforme o seu estado atual
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+interruptor_merryxmas:
+	MOV R1, estado_merry				; Carrega o estado atual do objeto Merryxmas
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_merryxmas					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_merryxmas					; Caso contrário, oculta o objeto
+
+mostra_merryxmas:
+	CALL mostra_objeto
+    JMP fim_interruptor_merryxmas				; Sai da rotina
+
+esconde_merryxmas:
+	CALL esconde_objeto
+    JMP fim_interruptor_merryxmas				; Sai da rotina
+
+fim_interruptor_merryxmas:
+	RET
