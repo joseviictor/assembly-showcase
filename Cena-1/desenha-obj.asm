@@ -337,35 +337,35 @@ desenha_objetos:
 	PUSH R7
 	PUSH R8									; Salva os registros usados para restaurar no final
 
-seleciona_ecra:
-	MOV [SELECIONA_ECRA], R7				; seleciona ecrã
+seleciona_ecra: 
+	MOV [SELECIONA_ECRA], R7				; seleciona ecrã (um para cada objeto)
 
 esconder_ecras_que_iniciam_ocultos:
-	CMP R7, 0								; se for o ecrã (0) - neve (0)
-	JZ esconde_neve							; esconde neve (0)
-	CMP R7, 1								; se for o ecrã (1) - neve (1)
-	JZ esconde_neve							; esconde neve (1)
-	CMP R7, 3								; se for o ecrã (3) - luzes arvore (0)
-	JZ esconde_luzes_arvore					; esconde luzes arvore (0)
-	CMP R7, 4 								; se for o ecrã (4) - luzes arvore (1)
-	JZ esconde_luzes_arvore					; esconde luzes arvore (1)
-	JMP desenhar_todos_objetos						; se não for nenhum dos ecrãs acima, reinicia a coluna
+	CMP R7, 0								; se for o ecrã 0 - neve_0
+	JZ esconde_neve							; esconde neve_0
+	CMP R7, 1								; se for o ecrã 1 - neve_1
+	JZ esconde_neve							; esconde neve_1
+	CMP R7, 3								; se for o ecrã 3 - luzes_arvore_0
+	JZ esconde_luzes_arvore					; esconde luzes_arvore_0
+	CMP R7, 4 								; se for o ecrã 4 - luzes_arvore_1
+	JZ esconde_luzes_arvore					; esconde luzes_arvore_1
+	JMP desenhar_objeto_atual				; se não for nenhum dos ecrãs acima, não oculta o ecrã e desenha o objeto normalmente
 
 esconde_neve:
 	MOV R8, 0								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 1								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_todos_objetos						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_objeto_atual						; reinicia a coluna para desenhar o próximo objeto
 
 esconde_luzes_arvore:
 	MOV R8, 3								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 4								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_todos_objetos						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_objeto_atual						; reinicia a coluna para desenhar o próximo objeto
 
-desenhar_todos_objetos:
+desenhar_objeto_atual:
 	CALL desenha_objeto
 	
 próximo_objeto:
