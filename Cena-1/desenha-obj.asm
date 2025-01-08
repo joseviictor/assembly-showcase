@@ -650,10 +650,10 @@ sai_atraso_arvore:
 ; Argumentos:   R1 - número do som a reproduzir
 ;
 ; -------------------------------------------------------------------------------------------------------------------
+reproduz_som:
 	PUSH R1								; Salva o conteúdo de R1
 	PUSH R2								; Salva o conteúdo de R2
-
-reproduz_som:
+	
 	MOV R2, 100							; define valor a ser usado como volume do som.
 	MOV [PARA_TODOS_SONS], R2			; para todos os sons
 	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
