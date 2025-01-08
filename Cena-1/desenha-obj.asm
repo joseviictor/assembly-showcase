@@ -329,35 +329,13 @@ fim:
 ; ********************************************************************************************************************
 ; -------------------------------------------------------------------------------------------------------------------
 ; DESENHA_OBJETOS - Desenha todos os objetos da cena nas respetivas linhas, colunas e com a forma e cor definidas na tabela indicada.
-; Argumentos:   R4 - tabela que define o objeto
-;               R7 - número do ecrã a desenhar
+; Argumentos:  R7 - número do ecrã a desenhar
 ;
 ; -------------------------------------------------------------------------------------------------------------------
 desenha_objetos:
-	PUSH R2
-	PUSH R3
 	PUSH R4
-	PUSH R5
-	PUSH R6
 	PUSH R7
 	PUSH R8									; Salva os registros usados para restaurar no final
-
-	posição_objeto:
-    MOV R1, [R4]							; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1							; guarda LINHA do objeto
-	ADD R4, 2								; avança para a 2ª palavra da tabela que define o objeto
-	
-	MOV R2, [R4]							; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	MOV [coluna], R2						; guarda coluna do objeto
-	ADD R4, 2								; avança para a 3ª palavra da tabela que define o objeto
-	
-	MOV R5, [R4]							; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5						; guarda largura
-	ADD R4, 2								; avança para a 4ª palavra da tabela que define o objeto
-	
-	MOV R6, [R4]							; obtém a altura do objeto
-	MOV [altura], R6						; guarda a altura do objeto
-	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
 seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7				; seleciona ecrã
@@ -371,72 +349,40 @@ esconder_ecras_que_iniciam_ocultos:
 	JZ esconde_luzes_arvore					; esconde luzes arvore (0)
 	CMP R7, 4 								; se for o ecrã (4) - luzes arvore (1)
 	JZ esconde_luzes_arvore					; esconde luzes arvore (1)
-	JMP reinicia_coluna						; se não for nenhum dos ecrãs acima, reinicia a coluna
+	JMP desenhar_todos_objetos						; se não for nenhum dos ecrãs acima, reinicia a coluna
 
 esconde_neve:
 	MOV R8, 0								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 1								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_todos_objetos						; reinicia a coluna para desenhar o próximo objeto
 
 esconde_luzes_arvore:
 	MOV R8, 3								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 4								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_todos_objetos						; reinicia a coluna para desenhar o próximo objeto
 
-reinicia_coluna:       						; desenha pixel na linha e coluna do objeto a partir da tabela
-	MOV R2, [coluna]						; reinicia a coluna para cada linha
-
-desenha_pixel:
-	MOV	R3, [R4]							; obtém a cor do pixel do objeto
-	CALL escreve_pixel						; escreve cada pixel do objeto
-
-próxima_coluna:
-	ADD	R4, 2								; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               				; próxima coluna
-    SUB R5, 1								; menos uma coluna para tratar
-    JNZ desenha_pixel      					; continua até percorrer toda a largura do objeto
-
-próxima_linha:
-	ADD R1, 1								; próxima linha
-	MOV R5, [largura]						; reinicia a largura do objeto
-	SUB R6, 1								; menos uma linha para tratar
-	JNZ reinicia_coluna						; continua até percorrer todas as linhas
+desenhar_todos_objetos:
+	CALL desenha_objeto
 	
 próximo_objeto:
 	SUB R7, 1								; decrementa os ecrãs para desenhar
-	JNN posição_objeto						; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
+	JNN seleciona_ecra						; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
 	POP R8									; Restaura os registros e retorna
 	POP	R7
-	POP	R6
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
+	POP R4
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; DESENHA_OBJETO - Desenha um objeto na linha, colunas e com a forma e cor definidas na tabela indicada.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R4 - tabela que define o objeto
-;               R7 - número do ecrã a desenhar
+; Argumentos:   R4 - tabela que define o objeto
 ;
 ; -------------------------------------------------------------------------------------------------------------------
 desenha_objeto:
-	PUSH R2
-	PUSH R3
-	PUSH R4
-	PUSH R5
-	PUSH R6
-	PUSH R7
-	PUSH R8									; Salva os registros usados para restaurar no final
-
-	posição_objeto:
     MOV R1, [R4]							; obtém a linha do objeto, será decrementada para controlo de fluxo
 	MOV [linha], R1							; guarda LINHA do objeto
 	ADD R4, 2								; avança para a 2ª palavra da tabela que define o objeto
@@ -452,34 +398,6 @@ desenha_objeto:
 	MOV R6, [R4]							; obtém a altura do objeto
 	MOV [altura], R6						; guarda a altura do objeto
 	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
-
-seleciona_ecra:
-	MOV [SELECIONA_ECRA], R7				; seleciona ecrã
-
-esconder_ecras_que_iniciam_ocultos:
-	CMP R7, 0								; se for o ecrã (0) - neve (0)
-	JZ esconde_neve							; esconde neve (0)
-	CMP R7, 1								; se for o ecrã (1) - neve (1)
-	JZ esconde_neve							; esconde neve (1)
-	CMP R7, 3								; se for o ecrã (3) - luzes arvore (0)
-	JZ esconde_luzes_arvore					; esconde luzes arvore (0)
-	CMP R7, 4 								; se for o ecrã (4) - luzes arvore (1)
-	JZ esconde_luzes_arvore					; esconde luzes arvore (1)
-	JMP reinicia_coluna						; se não for nenhum dos ecrãs acima, reinicia a coluna
-
-esconde_neve:
-	MOV R8, 0								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	MOV R8, 1								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
-
-esconde_luzes_arvore:
-	MOV R8, 3								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	MOV R8, 4								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
 
 reinicia_coluna:       						; desenha pixel na linha e coluna do objeto a partir da tabela
 	MOV R2, [coluna]						; reinicia a coluna para cada linha
@@ -499,18 +417,7 @@ próxima_linha:
 	MOV R5, [largura]						; reinicia a largura do objeto
 	SUB R6, 1								; menos uma linha para tratar
 	JNZ reinicia_coluna						; continua até percorrer todas as linhas
-	
-próximo_objeto:
-	SUB R7, 1								; decrementa os ecrãs para desenhar
-	JNN posição_objeto						; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
-	POP R8									; Restaura os registros e retorna
-	POP	R7
-	POP	R6
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
 	RET
 
 ; ********************************************************************************************************************
