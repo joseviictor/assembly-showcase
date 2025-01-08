@@ -201,12 +201,12 @@ luzes2:					; tabela que define o objeto luzes da árvore 2 (cor, largura, pixel
 	WORD  0000H, 0000H, 0000H,0F903H, 0000H, 0000H, 0000H,0FFC0H
 
 merry_xmas:				; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
-	WORD  24, 9, 49, 5 	; linha,coluna,largura,altura
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH
-	WORD  0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H
-	WORD  0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH
-	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H
+	WORD  24, 4, 59, 5 	; linha,coluna,largura,altura
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H
+	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
 
 neve1:					; tabela que define o objeto neve 1 (cor, largura, pixels)
 	WORD  0, 0, 64, 32 	; linha,coluna,largura,altura
@@ -297,6 +297,7 @@ inicio:
 	MOV R7, NUM_ECRAS						; num total de ecrãs a desenhar (NUM_ECRAS + 1)
 
 	CALL desenha_objetos					; Chama a rotina para desenhar o objeto
+	CALL anima_merryxmas					; Chama a rotina para animar a mensagem de feliz natal
 
 ciclo:										; ciclo das rotinas cooperativas no programa principal
 	CALL teclado							; verifica tecla premida
@@ -525,73 +526,35 @@ fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa pr
 ; Argumentos:  Nenhum
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
-;PROCESS SP_inicial_arvore
 anima_merryxmas:
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
-	PUSH R3
 	PUSH R4
-	PUSH R5
-	PUSH R6
 	PUSH R7
 
-	MOV R3, 2								; num do ecrã do merryxmas
-	MOV [SELECIONA_ECRA], R3				; seleciona ecrã merryxmas
-	MOV R4, merry_xmas						; endereço da tabela que define o objeto
-	MOV R7, 10	
+	MOV R7, 5								; num total de colunas a mover
 
-posição_objeto_merryxmas:
-    MOV R1, [R4]						; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1						; guarda LINHA do objeto
-	ADD R4, 2							; avança para a 2ª palavra da tabela que define o objeto
-	
-	MOV R2, [R4]						; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	ADD R2, 2
-	MOV [coluna], R2					; guarda coluna do objeto
-	ADD R4, 2							; avança para a 3ª palavra da tabela que define o objeto
-	
-	MOV R5, [R4]						; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5					; guarda largura
-	ADD R4, 2							; avança para a 4ª palavra da tabela que define o objeto
-	
-	MOV R6, [R4]						; obtém a altura do objeto
-	MOV [altura], R6					; guarda a altura do objeto
-	ADD R4, 2							; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
-
-reinicia_coluna_merryxmas:       			; desenha pixel na linha e coluna do objeto a partir da tabela
-	MOV R2, [coluna]			; reinicia a coluna para cada linha
-
-desenha_pixel_merryxmas:
-	MOV	R3, [R4]				; obtém a cor do pixel do objeto
-	CALL escreve_pixel			; escreve cada pixel do objeto
-
-próxima_coluna_merryxmas:
-	ADD	R4, 2					; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               	; próxima coluna
-    SUB R5, 1					; menos uma coluna para tratar
-    JNZ desenha_pixel_merryxmas      		; continua até percorrer toda a largura do objeto
-
-próxima_linha_merryxmas:
-	ADD R1, 1					; próxima linha
-	MOV R5, [largura]			; reinicia a largura do objeto
-	SUB R6, 1					; menos uma linha para tratar
-	JNZ reinicia_coluna_merryxmas			; continua até percorrer todas as linhas
+desenha_objeto_merryxmas:
+	MOV R1, 2								; num do ecrã do merryxmas
+	MOV [SELECIONA_ECRA], R1				; seleciona ecrã merryxmas
+	MOV R4, merry_xmas						; endereço da tabela que define o objeto merryxmas
+	CALL desenha_objeto
 
 atualiza_coluna_merryxmas:
+	MOV R4, merry_xmas
+	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto merryxmas
+	MOV R2, [R4]							; atualiza a coluna do objeto
+	ADD R2, 1
+	MOV [R4], R2
 	SUB R7, 1					
-	JNZ posição_objeto_merryxmas			; continua até percorrer todas as colunas
+	JNZ desenha_objeto_merryxmas			; continua até percorrer todas as colunas
 	
-
 fim_rotina_merryxmas:							; Restaura os registros salvos e retorna ao programa principal
 	POP R7
-	POP R6
-	POP R5
 	POP R4
-	POP R3
 	POP R2
 	POP R1
 	RET
-
 
 ; ********************************************************************************************************************
 ; Rotinas Auxiliares 
