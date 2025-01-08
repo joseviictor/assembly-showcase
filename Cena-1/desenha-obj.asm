@@ -340,7 +340,7 @@ desenha_objetos:
 seleciona_ecra: 
 	MOV [SELECIONA_ECRA], R7				; seleciona ecrã (um para cada objeto)
 
-esconder_ecras_que_iniciam_ocultos:
+verifica_ecra_atual:
 	CMP R7, 0								; se for o ecrã 0 - neve_0
 	JZ esconde_neve							; esconde neve_0
 	CMP R7, 1								; se for o ecrã 1 - neve_1
@@ -596,7 +596,6 @@ fim_rotina_merryxmas:							; Restaura os registros salvos e retorna ao programa
 ; ********************************************************************************************************************
 ; Rotinas Auxiliares 
 ; ********************************************************************************************************************
-
 ; -------------------------------------------------------------------------------------------------------------------
 ; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
 ; Argumentos:   R1 - linha
