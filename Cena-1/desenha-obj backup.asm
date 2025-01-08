@@ -1,16 +1,20 @@
-; *********************************************************************************
-; * IST-UL | UAlg
-; * Modulo:    lab4-objeto.asm
-; * Descrição: Este programa ilustra o desenho de um objeto do ecrã, em que os pixels
-; *            são definidos por uma tabela.
-; *			A zona de dados coloca-se tipicamente primeiro, para ser mais visível,
-; *			mas o código tem de começar no endereço 0000H. As diretivas PLACE
-; *			permitem esta inversão da ordem de dados e código no programa face aos endereços
-; *********************************************************************************
+; ####################################################################################################################
+; * UAlg | ISE-Dee | Arquitetura de Computadores | 2024-2025
+; * Trabalho Final da Unidade Curricular Arquitetura de Computadores
+; * Autor: José Victor Santos (a56278), Diogo Rodrigues (79299), Gonçalo Marques (71433)
 
-; *********************************************************************************
-; * Constantes
-; *********************************************************************************
+; * Descrição: Este projeto consiste em aplicar conceitos de arquiteura de computadores para criar uma 
+; * “Vitrine Natalícia”, para ser colocada na montra de uma loja (real ou imaginária, à sua escolha). 
+; * O projeto é obrigatoriamente desenvolvido no Simulador SIMAC, na versão 2.3.0 (Out 2024), disponível na Tutoria.
+; *  A vitrine festiva consiste, genericamente, num ecrã multimédia (MediaCenter), que irá apresentar 
+; * elementos decorativos de Natal e/ou Ano Novo, em Pixel Art. Alguns dos elementos devem ser 
+; * animados, podendo ter desde animações simples (e.g., piscar) até outras mais elaboradas, como 
+; * movimento pelo ecrã.
+; ####################################################################################################################
+
+; ####################################################################################################################
+; # CONSTANTES
+; ####################################################################################################################
 COMANDOS				EQU	6000H				; endereço de base dos comandos do MediaCenter
 
 APAGA_PIXEIS_ECRA		EQU COMANDOS + 00H		; Apaga todos os pixeis do ecrã especificado
@@ -21,53 +25,48 @@ DEFINE_LINHA			EQU COMANDOS + 0AH		; endereço do comando para definir a linha
 DEFINE_COLUNA			EQU COMANDOS + 0CH		; endereço do comando para definir a coluna
 DEFINE_PIXEL			EQU COMANDOS + 12H		; endereço do comando para escrever um pixel
 APAGA_AVISO				EQU COMANDOS + 40H		; endereço do comando para apagar o aviso de nenhum cenário selecionado
-APAGA_ECRÃ				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
+APAGA_ECRA				EQU COMANDOS + 02H		; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_BG			EQU COMANDOS + 42H		; endereço do comando para selecionar uma imagem de fundo
 REMOVE_BG	 			EQU COMANDOS + 40H 		; endereço do comando para remover background
 
 SELECTIONA_MIDIA		EQU COMANDOS + 48H		; seleciona arquivo de midia (GIF, som ou video), para ser usado nos comandos subsequentes
-INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som continuamente até ser parado
+REPRODUZ_SOM			EQU COMANDOS + 5AH		; endereço do comando para reproduzir midia selecionada apenas 1x
+INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som especificado, continuamente até ser parado
 VOLUME_SOM				EQU COMANDOS + 4AH		; define volume do som (0-100%)
-PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som
-PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som
-CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som
+PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som especificado
+PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som especificado
+CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som especificado
+PARA_TODOS_SONS			EQU COMANDOS + 68H		; endereço do comando para parar todos os sons
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
-LINHA_TECLADO			EQU	8					; linha a testar (4ª linha, 1000b)
 MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
-TECLA_C					EQU	1					; tecla na primeira coluna do teclado (tecla C)
-TECLA_D					EQU 2					; tecla na segunda coluna do teclado (tecla D)
-TECLA_E					EQU 4					; tecla na terceira coluna do teclado (tecla E)
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
-; #######################################################################
+DELAY					EQU 00A0H				; valor usado para implementar um atraso temporal (0200H = 512)
+
+; ####################################################################################################################
 ; # ZONA DE DADOS 
-; #######################################################################
-	PLACE		0100H
+; ####################################################################################################################
+	PLACE		0500H
 
 ; Reserva do espaço para as pilhas dos processos
-	STACK 100H			; espaço reservado para a pilha do processo "programa principal"
+	STACK 200H			; espaço reservado para a pilha do processo "programa principal"
 SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve ser inicializado
-							
-	STACK 100H			; espaço reservado para a pilha do processo "teclado"
-SP_inicial_teclado:		; este é o endereço com que o SP deste processo deve ser inicializado
-							
-	STACK 100H			; espaço reservado para a pilha do processo "objeto"
-SP_inicial_objeto:		; este é o endereço com que o SP deste processo deve ser inicializado
-							
-tecla_carregada:
-	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
-						; uma vez por cada tecla carregada
-							
-tecla_continuo:
-	LOCK 0				; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
-						; enquanto a tecla estiver carregada
-							
-evento_int_0:
-	LOCK 0				; LOCK para a rotina de interrupção comunicar ao processo objeto que a interrupção ocorreu
 
+linha_carregada:
+	WORD 0				; variável que indica se uma tecla foi carregada
+						; 0 - nenhuma tecla carregada
+						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
+coluna_carregada:
+	WORD 0				; variável que indica se uma tecla foi carregada
+						; 0 - nenhuma tecla carregada
+						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
+
+; -------------------------------------------------------------------------------------------------------------------
+; # variáveis para guardar a posição do objeto
+; -------------------------------------------------------------------------------------------------------------------
 linha:
 	WORD 0				; espaço reservado para guardar a linha do objeto
 
@@ -80,8 +79,44 @@ largura:
 altura:
 	WORD 0				; espaço reservado para guardar a altura do objeto
 
-giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
-	WORD  6, 8, 11, 15 		; linha,coluna,largura,altura
+; -------------------------------------------------------------------------------------------------------------------
+; # variáveis para controlo de animações
+; -------------------------------------------------------------------------------------------------------------------
+animacao_neve:			; flag para determinar se é para executar animação da neve
+	WORD 0
+
+animacao_arvore:		; flag para determinar se é para executar animação da árvore
+	WORD 0
+
+flag_neve_exibida:
+	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0 - nenhum, 1 ou 2)
+
+flag_arvore_exibida:
+	WORD 0				; flag para determinar qual objeto das luzes está sendo exibido (0 - nenhum, 1 ou 2)
+
+contador_atraso_neve:
+	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+
+contador_atraso_arvore:
+	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+
+estado_giftbox:
+	WORD 7,1			; Variavel que informa o número do ecrã do objeto (7) e se a giftbox está sendo exibida (1) ou ocultada (0)
+
+estado_painatal:
+	WORD 6,1			; Variavel que informa o número do ecrã do objeto (6) se pai natal está sendo exibido (1) ou ocultado (0)
+
+estado_arvore:
+	WORD 5,1			; Variavel que informa o número do ecrã do objeto (5) e se árvore está sendo exibida (1) ou ocultada (0)
+
+estado_merry:
+	WORD 2,1			; Variavel que informa o número do ecrã do objeto (2) e se o letreiro merry xmas está sendo exibido (1) ou ocultado (0)
+
+; -------------------------------------------------------------------------------------------------------------------
+; # Tabela dos objetos a escrever nos respetivos ecrãs
+; -------------------------------------------------------------------------------------------------------------------
+giftbox:				; tabela que define o objeto giftbox (cor, largura, pixels)
+	WORD  6, 8, 11, 15 	; linha,coluna,largura,altura
 	WORD  0000H,0FC22H,0FC22H, 0000H, 0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H, 0000H
 	WORD  0FC22H,0FE12H,0FE12H,0FE12H, 0000H, 0000H, 0000H,0FC22H,0FE12H,0FE12H,0FC22H
 	WORD  0FC22H,0FE12H,0FE12H,0FE12H,0FC22H,0FC22H,0FC22H,0FE12H,0FE12H,0FE12H,0FC22H
@@ -98,8 +133,8 @@ giftbox:					; tabela que define o objeto giftbox (cor, largura, pixels)
 	WORD  0000H,0F353H,0F462H,0F462H,0FC22H,0FE12H,0FC22H,0F462H,0F462H,0F353H, 0000H
 	WORD  0000H,0F353H,0F353H,0F353H,0FC22H,0FE12H,0FC22H,0F353H,0F353H,0F353H, 0000H
 	
-pai_natal:					; tabela que define o objeto pai natal (cor, largura, pixels)
-	WORD  4, 26, 13, 17 	; linha,coluna,largura,altura
+pai_natal:				; tabela que define o objeto pai natal (cor, largura, pixels)
+	WORD  4, 26, 13, 17 ; linha,coluna,largura,altura
 	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H,0FBBBH,0FFFFH, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H,0FC22H,0FFFFH,0FFFFH, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H, 0000H,0FC22H,0FC22H,0FE12H,0FE12H,0FE12H,0FC22H, 0000H, 0000H, 0000H
@@ -165,8 +200,8 @@ luzes2:					; tabela que define o objeto luzes da árvore 2 (cor, largura, pixel
 	WORD  0FAE1H, 0000H, 0000H, 0000H, 0000H,0FE12H, 0000H, 0000H
 	WORD  0000H, 0000H, 0000H,0F903H, 0000H, 0000H, 0000H,0FFC0H
 
-merry_xmas:					; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
-	WORD  24, 9, 49, 5 		; linha,coluna,largura,altura
+merry_xmas:				; tabela que define o objeto que contém o texto merry xmas (cor, largura, pixels)
+	WORD  24, 9, 49, 5 	; linha,coluna,largura,altura
 	WORD  0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH
 	WORD  0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH,0FFFFH, 0000H,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H, 0000H, 0000H
 	WORD  0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH, 0000H,0FFFFH,0FFFFH,0FFFFH,0FFFFH, 0000H, 0000H,0FFFFH,0FFFFH, 0000H
@@ -243,109 +278,142 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 	WORD  0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H, 0000H
 	WORD  0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H, 0000H, 0000H,0FFFFH, 0000H, 0000H, 0000H, 0000H,0F444H, 0000H, 0000H
 
-; *********************************************************************************
-; * Código
-; *********************************************************************************
-	PLACE   0				; o código tem de começar em 0000H
+; ####################################################################################################################
+; * CÓDIGO
+; ####################################################################################################################
+	PLACE   0								; o código tem de começar em 0000H
 inicio:
-	MOV  SP, SP_inicial_prog_princ		; inicializa SP do programa principal
+	MOV  SP, SP_inicial_prog_princ			; inicializa SP do programa principal
 
-    MOV [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 0				; cenário de fundo número 0
-    MOV [SELECIONA_BG], R1	; seleciona o cenário de fundo
-	MOV [SELECTIONA_MIDIA], R1 ; seleciona ficheiro de mídia 0 - som.
-	MOV [INICIA_SOM], R1	; reproduz som
-	MOV R1, 100				; define valor a ser usado como volume do som.
-	MOV [VOLUME_SOM], R1	; define volume som como 100%
-	MOV	R4, giftbox			; endereço da tabela que define o primeiro objeto
-	MOV R7, NUM_ECRAS		; num total de ecrãs a desenhar (NUM_ECRAS + 1)
-
-	; cria processos. O CALL não invoca a rotina, apenas cria um processo executável
-	;CALL	teclado			; cria o processo teclado
-	;CALL	objeto			; cria o processo objeto
+  	MOV [APAGA_AVISO], R1					; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+  	MOV [APAGA_ECRA], R1					; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 0								; cenário de fundo número 0
+  	MOV [SELECIONA_BG], R1					; seleciona o cenário de fundo
+	MOV [SELECTIONA_MIDIA], R1				; seleciona som a reproduzir
+	MOV [INICIA_SOM], R1					; reproduz som
+	MOV R1, 0								; define valor a ser usado como volume do som.
+	MOV [VOLUME_SOM], R1					; define volume som como 100%
+	MOV	R4, giftbox							; endereço da tabela que define o primeiro objeto
+	MOV R7, NUM_ECRAS						; num total de ecrãs a desenhar (NUM_ECRAS + 1)
      
 posição_objeto:
-    MOV R1, [R4]			; obtém a linha do objeto, será decrementada para controlo de fluxo
-	MOV [linha], R1			; guarda LINHA do objeto
-	ADD R4, 2				; avança para a 2ª palavra da tabela que define o objeto
+    MOV R1, [R4]							; obtém a linha do objeto, será decrementada para controlo de fluxo
+	MOV [linha], R1							; guarda LINHA do objeto
+	ADD R4, 2								; avança para a 2ª palavra da tabela que define o objeto
 	
-	MOV R2, [R4]			; obtém a coluna do objeto, será decrementada para controlo de fluxo
-	MOV [coluna], R2		; guarda coluna do objeto
-	ADD R4, 2				; avança para a 3ª palavra da tabela que define o objeto
+	MOV R2, [R4]							; obtém a coluna do objeto, será decrementada para controlo de fluxo
+	MOV [coluna], R2						; guarda coluna do objeto
+	ADD R4, 2								; avança para a 3ª palavra da tabela que define o objeto
 	
-	MOV R5, [R4]			; obtém a largura do objeto - será decrementada para controlo de fluxo
-	MOV [largura], R5		; guarda largura
-	ADD R4, 2				; avança para a 4ª palavra da tabela que define o objeto
+	MOV R5, [R4]							; obtém a largura do objeto - será decrementada para controlo de fluxo
+	MOV [largura], R5						; guarda largura
+	ADD R4, 2								; avança para a 4ª palavra da tabela que define o objeto
 	
-	MOV R6, [R4]			; obtém a altura do objeto
-	MOV [altura], R6		; guarda a altura do objeto
-	ADD R4, 2				; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
+	MOV R6, [R4]							; obtém a altura do objeto
+	MOV [altura], R6						; guarda a altura do objeto
+	ADD R4, 2								; avança para a próxima palavra da tabela que define o objeto para obter a cor do pixel
 
-	CALL desenha_objeto
+	CALL desenha_objetos					; Chama a rotina para desenhar o objeto
 
-;mostra_neve0:
-;	MOV R1, 0
-;	MOV [ESCONDE_ECRA], R1
-;	MOV R1, 1
-;	MOV [MOSTRA_ECRA], R1
+ciclo:										; ciclo das rotinas cooperativas no programa principal
+	CALL teclado							; verifica tecla premida
+	CALL acoes_teclado						; executa ações do teclado conforme tecla premida
 
-;mostra_neve1:
-;	MOV R1, 0
-;	MOV [MOSTRA_ECRA], R1
-;	MOV R1, 1
-;	MOV [ESCONDE_ECRA], R1
-;	JMP mostra_neve0
+	verifica_flag_neve:						; Verifica se a animação de neve deve ser executada
+		MOV R3, [animacao_neve]				; Carrega o estado da flag de animação da neve
+		CMP R3, 0							; Compara o estado com 0
+		JZ verifica_flag_arvore				; Se a flag de animação da neve for (0), salta para fim_ciclo
+		CALL anima_neve						; Chama a rotina da animação da neve
 
-stop_som:
-	MOV R1, 0				; nº do som a parar
-	MOV [PARA_SOM], R1		; para som
+	verifica_flag_arvore:					; Verifica se a animação da árvore deve ser executada
+		MOV R3, [animacao_arvore]			; Carrega o estado da flag de animação da árvore
+		CMP R3, 0							; Compara o estado com 0
+		JZ fim_ciclo						; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		CALL anima_arvore					; Chama a rotina da animação da neve
+
+fim_ciclo:
+	JMP ciclo				 				; volta para o início do loop principal
 
 fim:
-    JMP fim                 ; termina programa
+    JMP fim                 				; finaliza o programa
 
-; **********************************************************************
-; DESENHA_OBJETO - Desenha um objeto na linha e coluna indicadas
+; ####################################################################################################################
+; * ROTINAS
+; ####################################################################################################################
+
+; ********************************************************************************************************************
+; Rotina para desenho inicial dos objetos
+; ********************************************************************************************************************
+; -------------------------------------------------------------------------------------------------------------------
+; DESENHA_OBJETOS - Desenha um objeto na linha e coluna indicadas
 ;			    com a forma e cor definidas na tabela indicada.
 ; Argumentos:   R1 - linha
 ;               R2 - coluna
 ;               R4 - tabela que define o objeto
+;               R7 - número do ecrã a desenhar
 ;
-; **********************************************************************
-desenha_objeto:
+; -------------------------------------------------------------------------------------------------------------------
+desenha_objetos:
 	PUSH R2
 	PUSH R3
 	PUSH R4
 	PUSH R5
 	PUSH R6
 	PUSH R7
+	PUSH R8									; Salva os registros usados para restaurar no final
 
 seleciona_ecra:
-	MOV [SELECIONA_ECRA], R7	; seleciona ecrã
+	MOV [SELECIONA_ECRA], R7				; seleciona ecrã
 
-reinicia_coluna:       		; desenha pixel na linha e coluna do objeto a partir da tabela
-	MOV R2, [coluna]		; reinicia a coluna para cada linha
+esconder_ecras_que_iniciam_ocultos:
+	CMP R7, 0								; se for o ecrã (0) - neve (0)
+	JZ esconde_neve							; esconde neve (0)
+	CMP R7, 1								; se for o ecrã (1) - neve (1)
+	JZ esconde_neve							; esconde neve (1)
+	CMP R7, 3								; se for o ecrã (3) - luzes arvore (0)
+	JZ esconde_luzes_arvore					; esconde luzes arvore (0)
+	CMP R7, 4 								; se for o ecrã (4) - luzes arvore (1)
+	JZ esconde_luzes_arvore					; esconde luzes arvore (1)
+	JMP reinicia_coluna						; se não for nenhum dos ecrãs acima, reinicia a coluna
+
+esconde_neve:
+	MOV R8, 0								; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
+	MOV R8, 1								; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
+	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
+
+esconde_luzes_arvore:
+	MOV R8, 3								; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
+	MOV R8, 4								; num do ecrã a esconder
+	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
+	JMP reinicia_coluna						; reinicia a coluna para desenhar o próximo objeto
+
+reinicia_coluna:       						; desenha pixel na linha e coluna do objeto a partir da tabela
+	MOV R2, [coluna]						; reinicia a coluna para cada linha
 
 desenha_pixel:
-	MOV	R3, [R4]			; obtém a cor do pixel do objeto
-	CALL escreve_pixel		; escreve cada pixel do objeto
+	MOV	R3, [R4]							; obtém a cor do pixel do objeto
+	CALL escreve_pixel						; escreve cada pixel do objeto
 
 próxima_coluna:
-	ADD	R4, 2				; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               ; próxima coluna
-    SUB R5, 1				; menos uma coluna para tratar
-    JNZ desenha_pixel      	; continua até percorrer toda a largura do objeto
+	ADD	R4, 2								; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+    ADD R2, 1               				; próxima coluna
+    SUB R5, 1								; menos uma coluna para tratar
+    JNZ desenha_pixel      					; continua até percorrer toda a largura do objeto
 
 próxima_linha:
-	ADD R1, 1				; próxima linha
-	MOV R5, [largura]		; reinicia a largura do objeto
-	SUB R6, 1				; menos uma linha para tratar
-	JNZ reinicia_coluna		; continua até percorrer todas as linhas
+	ADD R1, 1								; próxima linha
+	MOV R5, [largura]						; reinicia a largura do objeto
+	SUB R6, 1								; menos uma linha para tratar
+	JNZ reinicia_coluna						; continua até percorrer todas as linhas
 	
 próximo_objeto:
-	SUB R7, 1				; menos um ecrã para desenhar
-	JNN posição_objeto		; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
+	SUB R7, 1								; decrementa os ecrãs para desenhar
+	JNN posição_objeto						; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
+	POP R8									; Restaura os registros e retorna
 	POP	R7
 	POP	R6
 	POP	R5
@@ -354,114 +422,473 @@ próximo_objeto:
 	POP	R2
 	RET
 
-; **********************************************************************
-; APAGA_OBJETO - Apaga um objeto na linha e coluna indicadas
-;			  com a forma definida na tabela indicada.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R4 - tabela que define o objeto
+; ********************************************************************************************************************
+; Rotinas de Animação
+; ********************************************************************************************************************
+; -------------------------------------------------------------------------------------------------------------------
+; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre 
+;			   objetos, de forma não bloqueante
+; Argumentos:   Nenhum
 ;
-; **********************************************************************
-apaga_objeto:
-	PUSH R2
-	PUSH R3
-	PUSH R4
-	PUSH R5
-	MOV	R5, [R4]			; obtém a largura do objeto
-	ADD	R4, 2				; endereço da cor do 1º pixel (2 porque a largura é uma word)
-apaga_pixels:       		; desenha os pixels do objeto a partir da tabela
-	MOV	R3, 0				; cor para apagar o próximo pixel do objeto
-	CALL escreve_pixel		; escreve cada pixel do objeto
-	ADD	R4, 2				; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD R2, 1               ; próxima coluna
-    SUB R5, 1				; menos uma coluna para tratar
-    JNZ apaga_pixels      	; continua até percorrer toda a largura do objeto
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
+; -------------------------------------------------------------------------------------------------------------------
+;PROCESS SP_inicial_neve
+anima_neve:
+	PUSH R1									; Salva o conteúdo de R1
+	PUSH R2									; Salva o conteúdo de R2
+
+verifica_atraso_neve:						; Verifica se o atraso necessário para a animação foi atingido
+	CALL atraso_neve						; Chama a rotina para verificar atraso
+	CMP R1, 0								; Compara o resultado da verificação
+	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
+
+verifica_flag_neve_exibida:					; Determina qual estado de animação da neve está ativo, baseado na flag `flag_neve_exibida`
+	MOV R2, [flag_neve_exibida]				; Carrega o valor da flag em R2
+	CMP R2, 0								; Verifica se a flag está no estado 0
+	JZ mostra_neve_1						; Se sim, chama a rotina para exibir neve 1
+	CMP R2, 1								; Verifica se a flag está no estado 1
+	JZ mostra_neve_2						; Se sim, chama a rotina para exibir neve 2
+	CMP R2, 2								; Verifica se a flag está no estado 2
+	JZ mostra_neve_1						; Se sim, retorna para o estado inicial, exibindo neve 1
+
+mostra_neve_1:							
+	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
+	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 0
+	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
+	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 1
+	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
+	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
+	JMP fim_rotina_neve						; Sai da rotina
+
+mostra_neve_2:								
+	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
+	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 0
+	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
+	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 1
+	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
+	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
+	JMP fim_rotina_neve						; Sai da rotina
+
+fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa principal
+	POP R2									
+	POP R1
 	RET
 
+; -------------------------------------------------------------------------------------------------------------------
+; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre 
+; 				 objetos de luzes de natal de forma não bloqueante
+; Argumentos:  Nenhum
+;				
+; -------------------------------------------------------------------------------------------------------------------
+;PROCESS SP_inicial_arvore
+anima_arvore:
+	PUSH R1									; Salva o conteúdo de R1
+	PUSH R2									; Salva o conteúdo de R2
 
-; **********************************************************************
+verifica_atraso_arvore:
+	CALL atraso_arvore						; Chama a rotina para verificar o atraso
+	CMP R1, 0								; Compara o valor do atraso com 0
+	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
+
+verifica_flag_arvore_exibida:				; Determina qual estado de animação da árvore está ativo, baseado na flag `flag_arvore_exibida`
+	MOV R2, [flag_arvore_exibida]			; Carrega o valor da flag em R2
+	CMP R2, 0								; Verifica se a flag está no estado 0
+	JZ mostra_arvore_1						; Se sim, chama a rotina para exibir a arvore 1
+	CMP R2, 1								; Verifica se a flag está no estado 1
+	JZ mostra_arvore_2						; Se sim, chama a rotina para exibir o padrão 2
+	CMP R2, 2								; Verifica se a flag está no estado 2
+	JZ mostra_arvore_1						; Se sim, retorna para o padrão inicial, exibindo o padrão 1
+
+mostra_arvore_1:							; Exibe o a árvore 1 e esconde a arvore 2
+	MOV R1, 3								; Seleciona o ecrã 3
+	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 3
+	MOV R1, 4								; Seleciona o ecrã 4
+	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 4
+	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
+	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
+	JMP fim_rotina_arvore					; Sai da rotina
+
+mostra_arvore_2:							; Exibe o a árvore 2 e esconde a arvore 1
+	MOV R1, 3								; Seleciona o ecrã 3
+	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 3
+	MOV R1, 4								; Seleciona o ecrã 4
+	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 4
+	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
+	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
+	JMP fim_rotina_arvore					; Sai da rotina
+
+fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa principal
+	POP R2
+	POP R1
+	RET
+
+; ********************************************************************************************************************
+; Rotinas Auxiliares 
+; ********************************************************************************************************************
+
+; -------------------------------------------------------------------------------------------------------------------
 ; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
 ; Argumentos:   R1 - linha
 ;               R2 - coluna
 ;               R3 - cor do pixel (em formato ARGB de 16 bits)
 ;
-; **********************************************************************
+; -------------------------------------------------------------------------------------------------------------------
 escreve_pixel:
-	MOV [DEFINE_LINHA], R1	; seleciona a linha
-	MOV [DEFINE_COLUNA], R2	; seleciona a coluna
-	MOV [DEFINE_PIXEL], R3	; altera a cor do pixel na linha e coluna selecionadas
+	MOV [DEFINE_LINHA], R1				; seleciona a linha
+	MOV [DEFINE_COLUNA], R2				; seleciona a coluna
+	MOV [DEFINE_PIXEL], R3				; altera a cor do pixel na linha e coluna selecionadas
 	RET
 
-
-; **********************************************************************
-; ATRASO - Executa um ciclo para implementar um atraso.
-; Argumentos:   R11 - valor que define o atraso
-;
-; **********************************************************************
-atraso:
-	PUSH R11
-ciclo_atraso:
-	SUB	R11, 1
-	JNZ	ciclo_atraso
-	POP	R11
+; -------------------------------------------------------------------------------------------------------------------
+; ATRASO NEVE - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
+; -------------------------------------------------------------------------------------------------------------------
+atraso_neve:
+	PUSH R2								; Salva o conteúdo de R2
+	MOV  R1, [contador_atraso_neve]		; obtém valor do contador do atraso
+	SUB  R1, 1							; Decrementa o contador em 1
+	MOV  [contador_atraso_neve], R1		; atualiza valor do contador do atraso
+	JNZ  sai_atraso_neve				; Se o contador não for zero, salta para `sai_atraso_neve`
+	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
+	MOV  [contador_atraso_neve], R2		; volta a colocar o valor inicial no contador do atraso
+sai_atraso_neve:					
+	POP  R2								; Restaura o valor original de R2
 	RET
 
-; **********************************************************************
-; TESTA_LIMITES - Testa se o objeto chegou aos limites do ecrã e nesse caso
-;			   impede o movimento (força R7 a 0)
-; Argumentos:	R2 - coluna em que o objeto está
-;			R6 - largura do objeto
-;			R7 - sentido de movimento do objeto (valor a somar à coluna
-;				em cada movimento: +1 para a direita, -1 para a esquerda)
-;
-; Retorna: 	R7 - 0 se já tiver chegado ao limite, inalterado caso contrário	
-; **********************************************************************
-testa_limites:
-	PUSH R5
-	PUSH R6
-testa_limite_esquerdo:		; vê se o objeto chegou ao limite esquerdo
-	MOV	R5, MIN_COLUNA
-	CMP	R2, R5
-	JGT	testa_limite_direito
-	CMP	R7, 0				; passa a deslocar-se para a direita
-	JGE	sai_testa_limites
-	JMP	impede_movimento	; entre limites. Mantém o valor do R7
-testa_limite_direito:		; vê se o objeto chegou ao limite direito
-	ADD	R6, R2				; posição a seguir ao extremo direito do objeto
-	MOV	R5, MAX_COLUNA
-	CMP	R6, R5
-	JLE	sai_testa_limites	; entre limites. Mantém o valor do R7
-	CMP	R7, 0				; passa a deslocar-se para a direita
-	JGT	impede_movimento
-	JMP	sai_testa_limites
-impede_movimento:
-	MOV	R7, 0				; impede o movimento, forçando R7 a 0
-sai_testa_limites:	
-	POP	R6
-	POP	R5
+; -------------------------------------------------------------------------------------------------------------------
+; ATRASO ARVORE - Faz DELAY iterações, para implementar um atraso no tempo,
+;		 de forma não bloqueante.
+; Argumentos: Nenhum
+; Saidas:		R1 - Se 0, o atraso chegou ao fim
+; -------------------------------------------------------------------------------------------------------------------
+atraso_arvore:
+	PUSH R2								; Salva o conteúdo de R2
+	MOV  R1, [contador_atraso_arvore]	; obtém valor do contador do atraso
+	SUB  R1, 1							; Decrementa o contador em 1
+	MOV  [contador_atraso_arvore], R1	; atualiza valor do contador do atraso
+	JNZ  sai_atraso_arvore				; Se o contador não for zero, salta para `sai_atraso_arvore`
+	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
+	MOV  [contador_atraso_arvore], R2	; volta a colocar o valor inicial no contador do atraso
+sai_atraso_arvore:
+	POP  R2								; Restaura o valor original de R2
 	RET
 
-; **********************************************************************
-; TECLADO - Faz uma leitura às teclas de uma linha do teclado e retorna o valor lido
-; Argumentos:	R6 - linha a testar (em formato 1, 2, 4 ou 8)
+; -------------------------------------------------------------------------------------------------------------------
+; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado continuamente até haver um stop.
+; Argumentos:   R1 - número do som a reproduzir
 ;
-; Retorna: 	R0 - valor lido das colunas do teclado (0, 1, 2, 4, ou 8)	
-; **********************************************************************
+; -------------------------------------------------------------------------------------------------------------------
+	PUSH R1								; Salva o conteúdo de R1
+	PUSH R2								; Salva o conteúdo de R2
+
+reproduz_som:
+	MOV R2, 100							; define valor a ser usado como volume do som.
+	MOV [PARA_TODOS_SONS], R2			; para todos os sons
+	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
+	MOV [VOLUME_SOM], R2				; Define o volume do som (100%)
+	MOV [INICIA_SOM], R1				; Inicia a reprodução do som especificado
+
+	POP R2								; Restaura os valores dos registradores
+	POP R1
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; Rotina para exibir os objetos no ecrã
+; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
+; -------------------------------------------------------------------------------------------------------------------
+exibe_objeto:
+	PUSH R1								; Salva o valor de R1 na pilha
+	PUSH R2								; Salva o valor de R2 na pilha
+	PUSH R3								; Salva o valor de R3 na pilha
+	PUSH R4								; Salva o valor de R4 na pilha
+
+	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
+	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
+	MOV R3, [R1]						; obtém estado do objeto
+	CMP R3, 0							; verifica se objeto está ocultado
+	JZ mostra_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
+	JMP esconde_objeto					; Caso contrário, oculta o objeto
+
+mostra_objeto:
+	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
+	MOV R4, 1							; Define o novo estado como "exibido" (1)
+	MOV [R1], R4						; atualiza estado do objeto para exibido (1)
+	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
+	JZ reproduz_som_painatal			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
+	CMP R2, 7							; Verifica se o objeto corresponde ao ecrã 7 (Giftbox)
+	JZ reproduz_som_giftbox				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
+	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
+	JZ reproduz_som_arvore				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
+	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
+	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
+	JMP fim_exibe_objeto				; Finaliza a rotina
+  
+esconde_objeto:
+	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
+	MOV R4, 0							; define o novo estado como "ocultado" (0)
+	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
+	JMP fim_exibe_objeto				; Finaliza a rotina
+
+reproduz_som_giftbox:
+	MOV R4, 4							; Identificador do som para a giftbox
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
+
+reproduz_som_painatal:
+	MOV R4, 3							; Identificador do som para o Pai Natal
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
+
+reproduz_som_arvore:
+	MOV R4, 5							; Identificador do som para a Árvore de Natal
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
+
+reproduz_som_merryxmas:
+	MOV R4, 6							; Identificador do som para o Letreiro Merry Xmas
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som
+	JMP fim_exibe_objeto				; Finaliza a rotina
+
+fim_exibe_objeto:						; Restaura os valores dos registradores
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
+	
+; -------------------------------------------------------------------------------------------------------------------
+; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
+;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; -------------------------------------------------------------------------------------------------------------------
 teclado:
-	PUSH R2
-	PUSH R3
-	PUSH R5
-	MOV  R2, TEC_LIN   ; endereço do periférico das linhas
-	MOV  R3, TEC_COL   ; endereço do periférico das colunas
-	MOV  R5, MASCARA   ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
-	MOVB [R2], R6      ; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
-	AND  R0, R5        ; elimina bits para além dos bits 0-3
-	POP	R5
-	POP	R3
-	POP	R2
-	RET
+	PUSH R0								; Salva o valor de R0 na pilha
+	PUSH R1								; Salva o valor de R1 na pilha
+	PUSH R2								; Salva o valor de R2 na pilha
+	PUSH R3								; Salva o valor de R3 na pilha
+	PUSH R5								; Salva o valor de R5 na pilha
+	
+	MOV  R2, TEC_LIN         			; endereço do periférico das linhas
+	MOV  R3, TEC_COL         			; endereço do periférico das colunas
+	MOV  R5, MASCARA		 			; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+
+testa_linha_1:
+	MOV  R1, 1				 			; testar a linha 1
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_2					; Caso contrário, testa a próxima linha
+
+testa_linha_2:
+	MOV  R1, 2				 			; testar a linha 2 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_3					; Caso contrário, testa a próxima linha
+
+testa_linha_3:
+	MOV  R1, 4				 			; testar a linha 3 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+	JMP testa_linha_4					; Caso contrário, testa a próxima linha
+
+testa_linha_4:
+	MOV  R1, 8				 			; testar a linha 4 
+	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
+	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
+	AND  R0, R5				 			; elimina bits para além dos bits 0-3
+	CMP  R0, 0               			; há tecla premida?
+	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla"
+
+nao_ha_tecla:
+	MOV  R1, 0				 			; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
+	MOV  R2, 0               			; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
+	JMP sai_teclado
+
+ha_tecla:
+	MOV  R2, R0              			; houve uma tecla premida
+
+sai_teclado:
+	MOV [linha_carregada], R1			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma linha premida, 1, 2, 4, 8)
+	MOV [coluna_carregada], R2			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma coluna premida, 1, 2, 4, 8)
+										; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
+	POP R5
+    POP R3
+    POP R2
+    POP R1
+    POP R0
+    RET                      			; retorna sempre, haja ou não uma tecla carregada
+
+; -------------------------------------------------------------------------------------------------------------------
+; AÇÃO TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
+;			ou desativar animações, reproduzir som, selecionar imagem de fundo ou parar todos os sons, entre outras.
+; Argumentos: Nenhum
+; -------------------------------------------------------------------------------------------------------------------
+acoes_teclado:
+	PUSH R0								; Salva o valor de R0 na pilha
+	PUSH R1								; Salva o valor de R1 na pilha
+	PUSH R2								; Salva o valor de R2 na pilha
+
+	MOV R0, [linha_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
+	MOV R1, [coluna_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
+	CMP R0, 0							; Verifica se nenhuma tecla foi carregada (linha = 0)
+	JZ sai_rotina_teclado				; Sai da rotina se nenhuma tecla foi pressionada
+
+verifica_linha_1:
+	CMP R0, 1							; Verifica se a linha carregada é a linha 1
+	JNZ verifica_linha_2				; Se não for, vai para a verificação da linha 2
+	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
+	JZ interruptor_giftbox				; Faz a animação do giftbox
+	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
+	JZ interruptor_painatal				; Faz a animação do pai natal
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
+	JZ interruptor_arvore				; Faz a animação da arvore
+	MOV R2, 8							; Prepara o valor 8 para comparação
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
+	JZ interruptor_merryxmas			; Faz a animação do merryxmas
+
+verifica_linha_2:
+	CMP R0, 2							; Verifica se a linha carregada é a linha 2
+	JNZ verifica_linha_3				; Se não for, vai para a verificação da linha 3
+	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
+	JZ para_som							; Para todos os sons
+	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
+	JZ reproduz_som_0					; Reproduz o 1º som
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
+	JZ reproduz_som_1					; Reproduz o 2º som
+	MOV R2, 8							; Prepara o valor 8 para comparação
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
+	JZ reproduz_som_2					; Reproduz o 3º som 
+
+verifica_linha_3:
+	CMP R0, 4							; Verifica se a linha carregada é a linha 3
+	JNZ verifica_linha_4				; Se não for, vai para a verificação da linha 4
+	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
+	JZ seleciona_imagem_bg_0			; Seleciona a 1º imagem de fundo 
+	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
+	JZ seleciona_imagem_bg_1			; Seleciona a 2º imagem de fundo 
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
+	JZ seleciona_imagem_bg_2			; Seleciona a 3º imagem de fundo 
+	MOV R2, 8							; Prepara o valor 8 para comparação
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
+	JZ seleciona_imagem_bg_3			; Seleciona a 4º imagem de fundo 
+
+verifica_linha_4:
+	MOV R2, 8							; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com k = 8
+	CMP R0, R2							; verifica se nenhuma tecla foi premida na linha 4
+	JNZ sai_rotina_teclado				; Se não for, sai da rotina
+	CMP R1, 1							; verifica se tecla premida é C
+	JZ ativa_animacao_neve				; ativa a animação da árvore
+	CMP R1, 2							; verifica se tecla premida é D
+	JZ desativa_animacao_neve			; Desativa a animação da neve
+	CMP R1, 4							; verifica se tecla premida é E
+	JZ ativa_animacao_arvore			; ativa a animação da árvore
+	MOV R2, 8							; Prepara o valor 8 para comparação
+	CMP R1, R2							; verifica se tecla premida é F
+	JZ desativa_animacao_arvore			; Desativa a animação da árvore
+
+; -------------------------------------------------------------------------------------------------------------------
+; Ações a executar conforme tecla pressionada
+; -------------------------------------------------------------------------------------------------------------------
+
+interruptor_giftbox:
+	MOV R1, estado_giftbox				; Carrega o estado atual do objeto giftbox
+	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+    JMP sai_rotina_teclado				; Sai da rotina
+
+interruptor_painatal:
+	MOV R1, estado_painatal				; Carrega o estado atual do objeto Pai Natal
+	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+    JMP sai_rotina_teclado				; Sai da rotina
+
+interruptor_arvore:
+	MOV R1, estado_arvore				; Carrega o estado atual do objeto da Arvore 
+	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+    JMP sai_rotina_teclado
+
+interruptor_merryxmas:
+	MOV R1, estado_merry				; Carrega o estado atual do objeto Merryxmas
+	CALL exibe_objeto 					; Chama a rotina para exibir o objeto
+    JMP sai_rotina_teclado				; Sai da rotina
+
+ativa_animacao_neve:
+	MOV R1, 1							; Define a flag de animação da neve como ativa
+	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	CALL reproduz_som					; Chama a rotina para reproduzir som
+	JMP sai_rotina_teclado				; Sai da rotina
+
+desativa_animacao_neve:
+	MOV R1, 0							; Define a flag de animação da neve como inativa
+	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 1
+	MOV R1, 1							; Definimos o ecra da neve
+	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
+	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
+	JMP sai_rotina_teclado				; Sai da rotina
+	
+ativa_animacao_arvore:
+	MOV R1, 1							; Define a flag de animação da árvore como ativa
+	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	JMP sai_rotina_teclado				; Sai da rotina
+
+desativa_animacao_arvore:
+	MOV R1, 0							; Define a flag de animação da árvore como inativa
+	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV R1, 3							; Definimos o ecra das luzes 1
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
+	MOV R1, 4							; Definimos o ecra das luzes 2
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
+	JMP sai_rotina_teclado				; Sai da rotina
+
+seleciona_imagem_bg_0:					
+	MOV R1, 0							; Define a 1º imagem de fundo
+	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+seleciona_imagem_bg_1:				
+	MOV R1, 1							; Define a 2º imagem de fundo 
+	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+seleciona_imagem_bg_2:					
+	MOV R1, 2							; Define a 3º imagem de fundo
+	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+seleciona_imagem_bg_3:			
+	MOV R1, 3							; Define a 4º imagem de fundo
+	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+reproduz_som_0:
+	MOV R1, 0							; Seleciona o 1º som
+	CALL reproduz_som					; Chama a rotina para reproduzir som
+	JMP sai_rotina_teclado				; Sai da rotina
+
+reproduz_som_1:
+	MOV R1, 1							; Seleciona o 2º som
+	CALL reproduz_som					; Chama a rotina para reproduzir som
+	JMP sai_rotina_teclado				; Sai da rotina
+
+reproduz_som_2:
+	MOV R1, 2							; Seleciona o 3º som
+	CALL reproduz_som					; Chama a rotina para reproduzir som
+	JMP sai_rotina_teclado				; Sai da rotina
+
+para_som:
+	MOV R1, 0							; Define o comando para parar todos os sons
+	MOV [PARA_TODOS_SONS], R1			; Para todos os sons em execução
+	JMP sai_rotina_teclado				; Sai da rotina
+
+sai_rotina_teclado:						; Restaura os valores dos registradores
+	POP  R2
+	POP  R1
+    POP  R0
+    RET  
