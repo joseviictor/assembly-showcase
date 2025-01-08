@@ -363,13 +363,13 @@ esconde_luzes_arvore:
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 4								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_objeto_atual						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_objeto_atual				; reinicia a coluna para desenhar o próximo objeto
 
 desenhar_objeto_atual:
 	CALL desenha_objeto
 	
 próximo_objeto:
-	SUB R7, 1								; decrementa os ecrãs para desenhar
+	SUB R7, 1								; decrementa o número do ecrã no qual será desenhado o próximo objeto.
 	JNN seleciona_ecra						; desenha próximo ecrã se R7 (num do ecrã) não for < 0-7
 
 	POP R8									; Restaura os registros e retorna
