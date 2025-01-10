@@ -37,6 +37,7 @@ PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som especifica
 PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som especificado
 CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som especificado
 PARA_TODOS_SONS			EQU COMANDOS + 68H		; endereço do comando para parar todos os sons
+STATUS_SOM				EQU COMANDOS + 52H		; endereço do comando para obter o status do som (0 - Unknown; 1 - Ready; 2 - Paused; 3 - Playing; 4 - Stopped; 5 - Error) 
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
@@ -893,22 +894,22 @@ seleciona_imagem_bg_3:
 
 reproduz_som_0:
 	MOV R1, 0							; Definimos o som zero para ser reproduzido
-	CALL reproduz_som
+	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
 	JMP sai_rotina_teclado				; Sai da rotina
 
 reproduz_som_1:
 	MOV R1, 1							; Definimos o som zero para ser reproduzido
-	CALL reproduz_som
+	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
 	JMP sai_rotina_teclado				; Sai da rotina
 
 reproduz_som_2:
 	MOV R1, 2							; Definimos o som zero para ser reproduzido
-	CALL reproduz_som
+	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
 	JMP sai_rotina_teclado				; Sai da rotina
 
 para_som:
 	MOV R1, 0							; Define o comando para parar todos os sons
-	MOV [PARA_TODOS_SONS], R1			; Para todos os sons em execução
+	MOV [PARA_TODOS_SONS], R1				; Comando para parar todos os sons
 	JMP sai_rotina_teclado				; Sai da rotina
 
 sai_rotina_teclado:						; Restaura os valores dos registradores
@@ -916,17 +917,6 @@ sai_rotina_teclado:						; Restaura os valores dos registradores
 	POP  R1
     POP  R0
     RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; REPRODUZ_SOM - Para todos os arquivos de mídia em execução e executa o que for indicado continuamente até haver um stop.
-; Argumentos:   R1 - número do som a reproduzir
-; -------------------------------------------------------------------------------------------------------------------	
-reproduz_som:
-	PUSH R1
-	MOV [PARA_TODOS_SONS], R1		; Para todos os sons em execução
-	MOV [INICIA_SOM], R1				; Inicia a reprodução do som especificado
-	POP R1
-	RFE
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; INTERRUPTOR_GIFTBOX - Rotina que mostra ou oculta o objeto giftbox, conforme o seu estado atual
@@ -957,6 +947,10 @@ fim_interruptor_giftbox:
 ; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
 interruptor_painatal:
+	PUSH R1
+	PUSH R2
+	PUSH R3
+
 	MOV R1, estado_painatal				; Carrega o estado atual do objeto Pai Natal
 	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
 	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
@@ -974,6 +968,9 @@ esconde_painatal:
     JMP fim_interruptor_painatal				; Sai da rotina
 
 fim_interruptor_painatal:
+	POP R3
+	POP R2
+	POP R1
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -1041,16 +1038,11 @@ ativa_animacao_neve_e_arvore:
 	MOV R1, 1							; Define a flag de animação da neve como ativa
 	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
 	MOV [animacao_arvore], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	MOV R2, 100							; Define o volume do som (100%)
-	MOV R1, 7							; Definimos o som zero para ser reproduzido
-	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
-	MOV [SELECTIONA_MIDIA], R1			; Seleciona o arquivo de mídia a ser reproduzido
-	MOV [VOLUME_SOM], R2				; Define o volume do som
-	MOV [INICIA_SOM], R1				; Comando do media center para reproduzir o som zero
-	
+	MOV R1, 7
+	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
 	POP R2
 	POP R1
-	RFE
+	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; desativa_animacao_neve_e_arvore - Rotina que desativa as animações da neve e luzes a piscar
@@ -1066,10 +1058,10 @@ desativa_animacao_neve_e_arvore:
 	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 1
 	MOV R1, 1							; Definimos o ecra da neve
 	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
-	MOV R1, 3								; Definimos o ecra das luzes 1
-	MOV [ESCONDE_ECRA], R1					; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
-	MOV R1, 4								; Definimos o ecra das luzes 2
-	MOV [ESCONDE_ECRA], R1					; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
+	MOV R1, 3							; Definimos o ecra das luzes 1
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
+	MOV R1, 4							; Definimos o ecra das luzes 2
+	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
 	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
 	
 	POP R1
@@ -1091,6 +1083,8 @@ ativa_animacao_merryxmas:
 ; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
 desativa_animacao_merryxmas:
+	PUSH R1
 	MOV R1, 0							; Define a flag de animação da árvore como ativa
 	MOV [animacao_merryxmas], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	POP R1
 	RET
