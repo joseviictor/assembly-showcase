@@ -312,23 +312,31 @@ ciclo:										; ciclo das rotinas cooperativas no programa principal
 	CALL teclado							; verifica tecla premida
 	CALL acoes_teclado						; executa ações do teclado conforme tecla premida
 
-	verifica_flag_neve:						; Verifica se a animação de neve deve ser executada
+	anima_neve:								; Verifica se a animação de neve deve ser executada
 		MOV R3, [animacao_neve]				; Carrega o estado da flag de animação da neve
 		CMP R3, 0							; Compara o estado com 0
-		JZ verifica_flag_arvore				; Se a flag de animação da neve for (0), salta para fim_ciclo
-		CALL anima_neve						; Chama a rotina da animação da neve
+		JZ anima_arvore						; Se a flag de animação da neve for (0), salta para anima_arvore
+		MOV R0, contador_atraso_neve 		; Carrega o endereço da variável contador_atraso_neve
+		MOV R2, DELAY_ANIMACAO_SIMPLES		; Carrega o valor do atraso da animação de neve
+		MOV R3, estado_neve_1				; Carrega o estado do ecrã de neve 1
+		MOV R4, estado_neve_2				; Carrega o estado do ecrã de neve 2
+		CALL animacao_simples				; Chama a rotina para animar a neve
 
-	verifica_flag_arvore:					; Verifica se a animação da árvore deve ser executada
+	anima_arvore:							; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_arvore]			; Carrega o estado da flag de animação da árvore
 		CMP R3, 0							; Compara o estado com 0
-		JZ verifica_flag_merryxmas						; Se a flag de animação da árvore for (0), salta para fim_ciclo
-		CALL anima_arvore					; Chama a rotina da animação da neve
+		JZ anima_merryxmas					; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		MOV R0, contador_atraso_arvore		; Carrega o endereço da variável contador_atraso_arvore
+		MOV R2, DELAY_ANIMACAO_SIMPLES		; Carrega o valor do atraso da animação da árvore
+		MOV R3, estado_luz_1				; Carrega o estado do ecrã de luzes 1
+		MOV R4, estado_luz_2				; Carrega o estado do ecrã de luzes 2
+		CALL animacao_simples				; Chama a rotina para animar a neve
 
-	verifica_flag_merryxmas:				; Verifica se a animação da árvore deve ser executada
+	anima_merryxmas:						; Verifica se a animação da árvore deve ser executada
 		MOV R3, [animacao_merryxmas]		; Carrega o estado da flag de animação da árvore
 		CMP R3, 0							; Compara o estado com 0
 		JZ fim_ciclo						; Se a flag de animação da árvore for (0), salta para fim_ciclo
-		CALL anima_merryxmas				; Chama a rotina da animação da neve
+		CALL animacao_complexa_merryxmas	; Chama a rotina da animação da neve
 
 fim_ciclo:
 	JMP ciclo				 				; volta para o início do loop principal
@@ -440,58 +448,29 @@ próxima_linha:
 ; Rotinas de Animação
 ; ********************************************************************************************************************
 ; -------------------------------------------------------------------------------------------------------------------
-; ANIMA_NEVE - Executa uma animação simples da neve, alternando entre 
-;			   objetos, de forma não bloqueante
-; Argumentos:   Nenhum
-;
-; -------------------------------------------------------------------------------------------------------------------
-anima_neve:
-	PUSH R0
-	PUSH R1									; Salva o conteúdo de R1
-	PUSH R2									; Salva o conteúdo de R2
-
-verifica_atraso_neve:						; Verifica se o atraso necessário para a animação foi atingido
-	MOV R0, contador_atraso_neve			; endereço da variável que guarda o atraso
-	MOV R2, DELAY_ANIMACAO_SIMPLES			; valor do atraso para as animações simples (neve e luzes da árvore) - são mais lentas do que a animação de merryxmas
-	CALL atraso								; Chama a rotina para verificar atraso
-	CMP R1, 0								; Compara o resultado da verificação
-	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
-
-alterna_objetos_neve:
-	MOV R0, estado_neve_1					; endereço da variável que guarda o estado do ecrã da neve 1
-	MOV R1, estado_neve_2					; endereço da variável que guarda o estado do ecrã da neve 2
-	CALL alterna_entre_dois_objetos
-
-fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa principal
-	POP R2									
-	POP R1
-	POP R0
-	RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; ANIMA_ARVORE - Executa uma animação simples da arvore, alternando entre 
-; 				 objetos de luzes de natal de forma não bloqueante
-; Argumentos:  Nenhum
+; ANIMACAO_SIMPLES - Executa uma animação simples (dois objetos a alternar entre si) de forma não bloqueante
+; Argumentos:  	R0 - endereço da variável que guarda o valor do contador do atraso
+;		   		R2 - endereço da variável que guarda o valor do atraso
+;   			R3 - endereço da variável que guarda o estado do objeto 1
+;   			R4 - endereço da variável que guarda o estado do objeto 2
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
-anima_arvore:
-	PUSH R0									; Salva o conteúdo de R0
-	PUSH R1									; Salva o conteúdo de R1
-	PUSH R2									; Salva o conteúdo de R2
+animacao_simples:
+	PUSH R0									; Salva o conteúdo de R0 na stack
+	PUSH R1									; Salva o conteúdo de R1 na stack
+	PUSH R2									; Salva o conteúdo de R2 na stack
 
-verifica_atraso_arvore:
-	MOV R0, contador_atraso_arvore			; argumento da rotina 'atraso' - endereço da variável que guarda o atraso
-	MOV R2, DELAY_ANIMACAO_SIMPLES			; arugmento da rotina 'atraso' - valor do atraso para as animações simples (neve e luzes da árvore) - mais lentas que a animação do merry xmas
-	CALL atraso								; Chama a rotina para verificar o atraso
+verifica_atraso:
+	CALL atraso								; Chama a rotina para verificar o atraso (argumentos - R0: variável do contador do atraso, R2: variável do valor do atraso)
 	CMP R1, 0								; Compara o valor do atraso com 0
-	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
+	JNZ fim_rotina_animacao_simples			; Se não for 0, sai da rotina
 
-alterna_objetos_luzes:
-	MOV R0, estado_luz_1					; num do ecrã das luzes da árvore 1 (ecrã 3)
-	MOV R1, estado_luz_2					; num do ecrã das luzes da árvore 2 (ecrã 4)
-	CALL alterna_entre_dois_objetos
+alterna_objetos:
+	MOV R0, R3								; num do ecrã das luzes da árvore 1 (ecrã 3)
+	MOV R1, R4								; num do ecrã das luzes da árvore 2 (ecrã 4)
+	CALL alterna_entre_dois_objetos			; Argumentos - R0: variável que guarda o num do ecrã e estado do objeto 1, R1: variável que guarda o num do ecrã e estado do objeto 2
 
-fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa principal
+fim_rotina_animacao_simples:				; Restaura os registros salvos e retorna à rotina que chamou
 	POP R2
 	POP R1
 	POP R0
@@ -503,7 +482,7 @@ fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa pr
 ; Argumentos:  Nenhum
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
-anima_merryxmas:
+animacao_complexa_merryxmas:
 	PUSH R0
     PUSH R1                                 ; Salva o conteúdo de R1
     PUSH R2                                 ; Salva o conteúdo de R2
@@ -595,7 +574,7 @@ escreve_pixel:
 ; -------------------------------------------------------------------------------------------------------------------
 ; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo, de forma não bloqueante.
 ; Argumentos:   R0 - endereço da variável que guarda o contador do atraso
-;				R10 - valor inicial do atraso a repor após o fim do atraso (ATRASO_ANIMACAO_SIMPLES ou ATRASO_ANIMACAO_COMPLEXA)
+;				R2 - valor inicial do atraso a repor após o fim do atraso (ATRASO_ANIMACAO_SIMPLES ou ATRASO_ANIMACAO_COMPLEXA)
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
 atraso:
@@ -608,67 +587,67 @@ sai_atraso:
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; MOSTRA_OBJETO: Rotina para exibir um ecrã, com base no estado do objeto (se estiver oculto, é exibido. Se estiver exibido, é ocultado),
-; 			   	 e reproduz um efeito sonoro associado ao objeto. Além disso, atualizada o estado do objeto para 1 - exibido.	
-; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
+; MOSTRA_OBJETO: Rotina para exibir um ecrã e reproduzir um efeito sonoro associado ao objeto. 	
+; Argumentos: R1 - endereço da 2ª palavra da variável que define o ecrã e estado do objeto (exibido/ocultado)
 ;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
 ; -------------------------------------------------------------------------------------------------------------------
 mostra_objeto:
 	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
 	MOV R4, 1							; Define o novo estado como "exibido" (1)
 	MOV [R1], R4						; atualiza estado do objeto para exibido (1)
-	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
-	JZ reproduz_som_painatal			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro "ho ho ho"
+	
+define_som_do_objeto:
+	MOV R4, 4							; Identificador do som associado ao ecrã do giftbox
 	CMP R2, 7							; Verifica se o objeto corresponde ao ecrã 7 (Giftbox)
-	JZ reproduz_som_giftbox				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da giftbox
+	JZ reproduz_som						; se o objeto a ser mostrado é o giftbox, reproduz efeito sonoro respetivo
+	
+	MOV R4, 3							; Identificador do som associado ao ecrã do pai natal
+	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
+	JZ reproduz_som						; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro respetivo
+	
+	MOV R4, 5							; Identificador do som associado ao ecrã da árvore de natal
 	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
-	JZ reproduz_som_arvore				; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro da árvore
+	JZ reproduz_som						; se o objeto a ser mostrado é a árvore, reproduz efeito sonoro respetivo
+	
+	MOV R4, 6							; Identificador do som associado ao ecrã do letreiro merry xmas
 	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
-	JZ reproduz_som_merryxmas			; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro do letreiro merry xmas
-	JMP fim_exibe_objeto				; Finaliza a rotina
+	JZ reproduz_som						; se o objeto a ser mostrado é o letreiro merry xmas, reproduz efeito sonoro respetivo
+	
+	JMP fim_mostra_objeto				; Finaliza a rotina
 
-reproduz_som_giftbox:
-	MOV R4, 4							; Identificador do som para a giftbox
+reproduz_som:
 	MOV [REPRODUZ_SOM], R4				; Reproduz o som
-	JMP fim_exibe_objeto				; Finaliza a rotina
+	JMP fim_mostra_objeto				; Finaliza a rotina
 
-reproduz_som_painatal:
-	MOV R4, 3							; Identificador do som para o Pai Natal
-	MOV [REPRODUZ_SOM], R4				; Reproduz o som
-	JMP fim_exibe_objeto				; Finaliza a rotina
-
-reproduz_som_arvore:
-	MOV R4, 5							; Identificador do som para a Árvore de Natal
-	MOV [REPRODUZ_SOM], R4				; Reproduz o som
-	JMP fim_exibe_objeto				; Finaliza a rotina
-
-reproduz_som_merryxmas:
-	MOV R4, 6							; Identificador do som para o Letreiro Merry Xmas
-	MOV [REPRODUZ_SOM], R4				; Reproduz o som
-	JMP fim_exibe_objeto				; Finaliza a rotina
-
-fim_exibe_objeto:						; Restaura os valores dos registradores
+fim_mostra_objeto:						; Restaura os valores dos registradores
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; ESCONDE_OBJETO: Rotina para ocultar um ecrã e seu respetivo objeto, atualizando o estado do objeto para 0 - oculto.
-; Argumentos: R1 - endereço da tabela que define o ecrã e estado do objeto a ser exibido/ocultado
+; Argumentos: R1 - endereço da variável que define o ecrã e estado do objeto (exibido/ocultado)
 ;			  R2 - número do ecrã a ser exibido/ocultado, em que o objeto está desenhado
 ; -------------------------------------------------------------------------------------------------------------------
 esconde_objeto:
+	PUSH R4
 	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
 	MOV R4, 0							; define o novo estado como "ocultado" (0)
 	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
+	POP R4
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ALTERNA_ENTRE_DOIS_OBJETOS: Rotina que alterna a exibição de dois ecrãs/objetos, consoante o ecrã exibido atualmente.
-; Argumentos: R0 - número do primeiro ecrã/objeto
-;			  R1 - número do segundo ecrã/objeto
-;			  R2 - endereço da tabela que define qual ecrã/objeto está a ser exibido/ocultado (1 ou 2)
+; ALTERNA_ENTRE_DOIS_OBJETOS: Rotina que alterna a exibição de dois ecrãs/objetos, consoante o ecrã exibido atualmente, e atualiza as flagas de estado dos objetos.
+; Argumentos: R0 - endereço da variável que guarda o número do ecrã e estado do primeiro objeto
+;			  R1 - endereço da variável que guarda o número do ecrã e estado do segundo objeto
 ; -------------------------------------------------------------------------------------------------------------------
 alterna_entre_dois_objetos:
+	PUSH R0
+	PUSH R1
+	PUSH R2
 	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6
 											
 	MOV R2, [R0]							; Carrega o número do ecrã do primeiro objeto obtido a partir da variável de estado
 	ADD R0, 2								; Avança para a próxima palavra da tabela, para obter o estado (0: oculto, 1: exibido)
@@ -701,7 +680,13 @@ mostra_obj_2:
 	JMP fim_rotina_alterna_objetos			; Sai da rotina
 
 fim_rotina_alterna_objetos:					; Restaura os registros salvos e retorna à rotina que o chamou
+	POP R6
+	POP R5
+	POP R4
 	POP R3
+	POP R2
+	POP R1
+	POP R0
 	RET
 	
 ; -------------------------------------------------------------------------------------------------------------------
