@@ -45,7 +45,7 @@ MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
 DELAY_ANIMACAO_SIMPLES	EQU 0A0H				; valor usado para implementar um atraso temporal (0A0H = 160)
-DELAY_ANIMACAO_COMPLEXA	EQU 020H				; valor usado para implementar um atraso temporal (0F0H = 32)
+DELAY_ANIMACAO_COMPLEXA	EQU 010H				; valor usado para implementar um atraso temporal (0F0H = 32)
 
 ; ####################################################################################################################
 ; # ZONA DE DADOS 
