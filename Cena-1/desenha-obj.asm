@@ -44,7 +44,8 @@ MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas
 
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
-DELAY					EQU 00A0H				; valor usado para implementar um atraso temporal (0200H = 512)
+DELAY_ANIMACAO_SIMPLES	EQU 0A0H				; valor usado para implementar um atraso temporal (0A0H = 160)
+DELAY_ANIMACAO_COMPLEXA	EQU 020H				; valor usado para implementar um atraso temporal (0F0H = 32)
 
 ; ####################################################################################################################
 ; # ZONA DE DADOS 
@@ -98,13 +99,13 @@ flag_arvore_exibida:
 	WORD 0				; flag para determinar qual objeto das luzes está sendo exibido (0 - nenhum, 1 ou 2)
 
 contador_atraso_neve:
-	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+	WORD DELAY_ANIMACAO_SIMPLES		; contador usado para gerar o atraso entre os movimentos dos objetos da neve
 
 contador_atraso_arvore:
-	WORD DELAY			; contador usado para gerar o atraso entre os movimentos dos objetos
+	WORD DELAY_ANIMACAO_SIMPLES		; contador usado para gerar o atraso entre os movimentos dos objetos das luzes
 
 contador_atraso_merryxmas:
-	WORD 0FH			; contador usado para gerar o atraso entre os movimentos dos objetos
+	WORD DELAY_ANIMACAO_COMPLEXA	; contador usado para gerar o atraso entre os movimentos do objeto merryxmas
 	
 estado_giftbox:
 	WORD 7,1			; Variavel que informa o número do ecrã do objeto (7) e se a giftbox está sendo exibida (1) ou ocultada (0)
@@ -444,6 +445,7 @@ anima_neve:
 
 verifica_atraso_neve:						; Verifica se o atraso necessário para a animação foi atingido
 	MOV R0, contador_atraso_neve			; endereço da variável que guarda o atraso
+	MOV R2, DELAY_ANIMACAO_SIMPLES			; valor do atraso para as animações simples (neve e luzes da árvore) - são mais lentas do que a animação de merryxmas
 	CALL atraso								; Chama a rotina para verificar atraso
 	CMP R1, 0								; Compara o resultado da verificação
 	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
@@ -488,12 +490,13 @@ fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa prin
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
 anima_arvore:
-	PUSH R0
+	PUSH R0									; Salva o conteúdo de R0
 	PUSH R1									; Salva o conteúdo de R1
 	PUSH R2									; Salva o conteúdo de R2
 
 verifica_atraso_arvore:
-	MOV R0, contador_atraso_arvore			; endereço da variável que guarda o atraso
+	MOV R0, contador_atraso_arvore			; argumento da rotina 'atraso' - endereço da variável que guarda o atraso
+	MOV R2, DELAY_ANIMACAO_SIMPLES			; arugmento da rotina 'atraso' - valor do atraso para as animações simples (neve e luzes da árvore) - mais lentas que a animação do merry xmas
 	CALL atraso								; Chama a rotina para verificar o atraso
 	CMP R1, 0								; Compara o valor do atraso com 0
 	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
@@ -563,6 +566,7 @@ anima_merryxmas:
 continuar_animacao:
     ; Verifica se o atraso necessário para a animação foi atingido
 	MOV R0, contador_atraso_merryxmas		; endereço da variável que guarda o atraso
+	MOV R2, DELAY_ANIMACAO_COMPLEXA			; valor do atraso para a animações complexa - é mais rápida para que o movimento do objeto seja mais suave
     CALL atraso                   			; Chama a rotina para verificar atraso
     CMP R1, 0                               ; Compara o resultado da verificação
     JNZ fim_rotina_merryxmas                ; Se não for 0 (ainda em atraso), sai da rotina
@@ -627,19 +631,17 @@ escreve_pixel:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; ATRASO - Faz DELAY iterações, para implementar um atraso no tempo, de forma não bloqueante.
-; Argumentos: Nenhum
+; Argumentos:   R0 - endereço da variável que guarda o contador do atraso
+;				R10 - valor inicial do atraso a repor após o fim do atraso (ATRASO_ANIMACAO_SIMPLES ou ATRASO_ANIMACAO_COMPLEXA)
 ; Saidas:		R1 - Se 0, o atraso chegou ao fim
 ; -------------------------------------------------------------------------------------------------------------------
 atraso:
-	PUSH R2								; Salva o conteúdo de R2
 	MOV  R1, [R0]						; obtém valor do contador do atraso
 	SUB  R1, 1							; Decrementa o contador em 1
 	MOV  [R0], R1						; atualiza valor do contador do atraso
 	JNZ  sai_atraso						; Se o contador não for zero, salta para `sai_atraso_neve`
-	MOV  R2, DELAY						; Carrega o valor de (DELAY) em R2
 	MOV  [R0], R2						; volta a colocar o valor inicial no contador do atraso
-sai_atraso:					
-	POP  R2								; Restaura o valor original de R2
+sai_atraso:			
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
