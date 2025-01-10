@@ -93,12 +93,6 @@ animacao_arvore:		; flag para determinar se é para executar animação da árvo
 animacao_merryxmas:		; flag para determinar se é para executar animação do letreiro merryxmas
 	WORD 0
 
-flag_neve_exibida:
-	WORD 0				; flag para determinar qual objeto da neve está sendo exibido (0 - nenhum, 1 ou 2)
-
-flag_arvore_exibida:
-	WORD 0				; flag para determinar qual objeto das luzes está sendo exibido (0 - nenhum, 1 ou 2)
-
 contador_atraso_neve:
 	WORD DELAY_ANIMACAO_SIMPLES		; contador usado para gerar o atraso entre os movimentos dos objetos da neve
 
@@ -119,6 +113,18 @@ estado_arvore:
 
 estado_merry:
 	WORD 2,1			; Variavel que informa o número do ecrã do objeto (2) e se o letreiro merry xmas está sendo exibido (1) ou ocultado (0)
+
+estado_luz_1:
+	WORD 3,0			; Variavel que informa o número do ecrã do objeto (3) e se o objeto luz 1 está sendo exibido (1) ou ocultado (0)
+
+estado_luz_2:
+	WORD 4,0			; Variavel que informa o número do ecrã do objeto (4) e se o objeto luz 2 está sendo exibido (1) ou ocultado (0)
+
+estado_neve_1:
+	WORD 0,0			; Variavel que informa o número do ecrã do objeto (0) e se o objeto neve 1 está sendo exibido (1) ou ocultado (0)
+
+estado_neve_2:
+	WORD 1,0			; Variavel que informa o número do ecrã do objeto (1) e se o objeto neve 2 está sendo exibido (1) ou ocultado (0)
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; # Tabela dos objetos a escrever nos respetivos ecrãs
@@ -366,7 +372,7 @@ esconde_neve:
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
 	MOV R8, 1								; num do ecrã a esconder
 	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_objeto_atual						; reinicia a coluna para desenhar o próximo objeto
+	JMP desenhar_objeto_atual				; reinicia a coluna para desenhar o próximo objeto
 
 esconde_luzes_arvore:
 	MOV R8, 3								; num do ecrã a esconder
@@ -451,32 +457,10 @@ verifica_atraso_neve:						; Verifica se o atraso necessário para a animação 
 	CMP R1, 0								; Compara o resultado da verificação
 	JNZ fim_rotina_neve						; Se não for 0 (ainda em atraso), sai da rotina
 
-verifica_flag_neve_exibida:					; Determina qual estado de animação da neve está ativo, baseado na flag `flag_neve_exibida`
-	MOV R2, [flag_neve_exibida]				; Carrega o valor da flag em R2
-	CMP R2, 0								; Verifica se a flag está no estado 0
-	JZ mostra_neve_1						; Se sim, chama a rotina para exibir neve 1
-	CMP R2, 1								; Verifica se a flag está no estado 1
-	JZ mostra_neve_2						; Se sim, chama a rotina para exibir neve 2
-	CMP R2, 2								; Verifica se a flag está no estado 2
-	JZ mostra_neve_1						; Se sim, retorna para o estado inicial, exibindo neve 1
-
-mostra_neve_1:							
-	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
-	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 0
-	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
-	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 1
-	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
-	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
-	JMP fim_rotina_neve						; Sai da rotina
-
-mostra_neve_2:								
-	MOV R1, 0								; Seleciona o ecrã 0 (neve 1)
-	MOV [ESCONDE_ECRA], R1					; Comando para esconder o ecrã 0
-	MOV R1, 1								; Seleciona o ecrã 1 (neve 2)
-	MOV [MOSTRA_ECRA], R1					; Comando para mostrar o ecrã 1
-	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
-	MOV [flag_neve_exibida], R2				; Salva a flag atualizada
-	JMP fim_rotina_neve						; Sai da rotina
+alterna_objetos_neve:
+	MOV R0, estado_neve_1					; endereço da variável que guarda o estado do ecrã da neve 1
+	MOV R1, estado_neve_2					; endereço da variável que guarda o estado do ecrã da neve 2
+	CALL alterna_entre_dois_objetos
 
 fim_rotina_neve:							; Restaura os registros salvos e retorna ao programa principal
 	POP R2									
@@ -502,32 +486,10 @@ verifica_atraso_arvore:
 	CMP R1, 0								; Compara o valor do atraso com 0
 	JNZ fim_rotina_arvore					; Se não for 0, sai da rotina
 
-verifica_flag_arvore_exibida:				; Determina qual estado de animação da árvore está ativo, baseado na flag `flag_arvore_exibida`
-	MOV R2, [flag_arvore_exibida]			; Carrega o valor da flag em R2
-	CMP R2, 0								; Verifica se a flag está no estado 0
-	JZ mostra_arvore_1						; Se sim, chama a rotina para exibir a arvore 1
-	CMP R2, 1								; Verifica se a flag está no estado 1
-	JZ mostra_arvore_2						; Se sim, chama a rotina para exibir o padrão 2
-	CMP R2, 2								; Verifica se a flag está no estado 2
-	JZ mostra_arvore_1						; Se sim, retorna para o padrão inicial, exibindo o padrão 1
-
-mostra_arvore_1:							; Exibe o a árvore 1 e esconde a arvore 2
-	MOV R1, 3								; Seleciona o ecrã 3
-	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 3
-	MOV R1, 4								; Seleciona o ecrã 4
-	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 4
-	MOV R2, 1								; Atualiza a flag para o próximo estado (1)
-	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
-	JMP fim_rotina_arvore					; Sai da rotina
-
-mostra_arvore_2:							; Exibe o a árvore 2 e esconde a arvore 1
-	MOV R1, 3								; Seleciona o ecrã 3
-	MOV [ESCONDE_ECRA], R1					; Mostra o ecrã 3
-	MOV R1, 4								; Seleciona o ecrã 4
-	MOV [MOSTRA_ECRA], R1					; Mostra o ecrã 4
-	MOV R2, 2								; Atualiza a flag para o próximo estado (2)
-	MOV [flag_arvore_exibida], R2			; Salva a flag atualizada
-	JMP fim_rotina_arvore					; Sai da rotina
+alterna_objetos_luzes:
+	MOV R0, estado_luz_1					; num do ecrã das luzes da árvore 1 (ecrã 3)
+	MOV R1, estado_luz_2					; num do ecrã das luzes da árvore 2 (ecrã 4)
+	CALL alterna_entre_dois_objetos
 
 fim_rotina_arvore:							; Restaura os registros salvos e retorna ao programa principal
 	POP R2
@@ -697,6 +659,49 @@ esconde_objeto:
 	MOV [ESCONDE_ECRA], R2				; Oculta o ecrã
 	MOV R4, 0							; define o novo estado como "ocultado" (0)
 	MOV [R1], R4						; atualiza estado do objeto para ocultado (0)
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; ALTERNA_ENTRE_DOIS_OBJETOS: Rotina que alterna a exibição de dois ecrãs/objetos, consoante o ecrã exibido atualmente.
+; Argumentos: R0 - número do primeiro ecrã/objeto
+;			  R1 - número do segundo ecrã/objeto
+;			  R2 - endereço da tabela que define qual ecrã/objeto está a ser exibido/ocultado (1 ou 2)
+; -------------------------------------------------------------------------------------------------------------------
+alterna_entre_dois_objetos:
+	PUSH R3
+											
+	MOV R2, [R0]							; Carrega o número do ecrã do primeiro objeto obtido a partir da variável de estado
+	ADD R0, 2								; Avança para a próxima palavra da tabela, para obter o estado (0: oculto, 1: exibido)
+	MOV R3, [R0]							; Carrega o estado do primeiro objeto
+
+	MOV R4, [R1]							; Carrega o número do ecrã do segundo objeto obtido a partir da variável de estado
+	ADD R1, 2								; Avança para a próxima palavra da tabela, para obter o estado (0: oculto, 1: exibido)
+	MOV R5, [R1]							; Carrega o estado do segundo objeto
+
+	CMP R3, 0								; Verifica se o primeiro objeto está oculto
+	JZ mostra_obj_1							; Se sim, chama a rotina para exibir objeto 1
+	JMP mostra_obj_2						; Se não, chama a rotina para exibir objeto 2
+
+mostra_obj_1:							
+	MOV [MOSTRA_ECRA], R2					; Comando para mostrar o ecrã do objeto 1
+	MOV [ESCONDE_ECRA], R4					; Comando para esconder o ecrã do objeto 2
+	MOV R6, 1								; Atualiza a flag para indicar que o primeiro objeto está exibido
+	MOV [R0], R6							; Salva a flag atualizada
+	MOV R6, 0								; Atualiza a flag para indicar que o segundo objeto está oculto
+	MOV [R1], R6							; Salva a flag atualizada
+	JMP fim_rotina_alterna_objetos			; Sai da rotina
+
+mostra_obj_2:								
+	MOV [ESCONDE_ECRA], R2					; Comando para esconder o ecrã do objeto 1
+	MOV [MOSTRA_ECRA], R4					; Comando para mostrar o ecrã do objeto 2
+	MOV R6, 0								; Atualiza a flag para indicar que o primeiro objeto está oculto
+	MOV [R0], R6							; Salva a flag atualizada
+	MOV R6, 1								; Atualiza a flag para indicar que o segundo objeto está exibido
+	MOV [R1], R6							; Salva a flag atualizada
+	JMP fim_rotina_alterna_objetos			; Sai da rotina
+
+fim_rotina_alterna_objetos:					; Restaura os registros salvos e retorna à rotina que o chamou
+	POP R3
 	RET
 	
 ; -------------------------------------------------------------------------------------------------------------------
