@@ -1396,25 +1396,25 @@
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
-      "playAsClip" : false
+      "playAsClip" : true
     }, {
       "filePathName" : "audio/gitfbox opening.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
-      "playAsClip" : false
+      "playAsClip" : true
     }, {
       "filePathName" : "audio/tree_efect.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
-      "playAsClip" : false
+      "playAsClip" : true
     }, {
       "filePathName" : "audio/merry_xmas.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
-      "playAsClip" : false
+      "playAsClip" : true
     }, {
       "filePathName" : "audio/christmas-party-time-249613 (1).mp3",
       "relative sound volume" : 1.0,

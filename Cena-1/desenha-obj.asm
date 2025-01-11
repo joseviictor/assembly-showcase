@@ -34,10 +34,7 @@ REPRODUZ_SOM			EQU COMANDOS + 5AH		; endereço do comando para reproduzir midia 
 INICIA_SOM				EQU COMANDOS + 5CH		; endereço do comando para reproduzir som especificado, continuamente até ser parado
 VOLUME_SOM				EQU COMANDOS + 4AH		; define volume do som (0-100%)
 PARA_SOM				EQU COMANDOS + 66H		; endereço do comando para parar som especificado
-PAUSA_SOM 				EQU COMANDOS + 5EH		; endereço do comando para pausar som especificado
-CONTINUA_SOM			EQU COMANDOS + 60H		; endereço do comando para continuar som especificado
 PARA_TODOS_SONS			EQU COMANDOS + 68H		; endereço do comando para parar todos os sons
-STATUS_SOM				EQU COMANDOS + 52H		; endereço do comando para obter o status do som (0 - Unknown; 1 - Ready; 2 - Paused; 3 - Playing; 4 - Stopped; 5 - Error) 
 
 TEC_LIN					EQU 0C000H				; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL					EQU 0E000H				; endereço das colunas do teclado (periférico PIN)
@@ -87,11 +84,11 @@ altura:
 ; -------------------------------------------------------------------------------------------------------------------
 ; # variáveis para controlo de animações
 ; -------------------------------------------------------------------------------------------------------------------
-animacao_neve:			; flag para determinar se é para executar animação da neve
-	WORD 0
+animacao_neve:			; flag para determinar se é para executar animação da neve e guardar o número dos ecrãs utilizados (0 e 1)
+	WORD 0, 0, 1
 
-animacao_luzes:		; flag para determinar se é para executar animação da árvore
-	WORD 0
+animacao_luzes:			; flag para determinar se é para executar animação das luzes e guardar o número dos ecrãs utilizados (3 e 4)
+	WORD 0, 3, 4 	
 
 animacao_merryxmas:		; flag para determinar se é para executar animação do letreiro merryxmas
 	WORD 0
@@ -453,8 +450,8 @@ próxima_linha:
 ; ANIMACAO_SIMPLES - Executa uma animação simples (dois objetos a alternar entre si) de forma não bloqueante
 ; Argumentos:  	R0 - endereço da variável que guarda o valor do contador do atraso
 ;		   		R2 - endereço da variável que guarda o valor do atraso
-;   			R3 - endereço da variável que guarda o estado do objeto 1
-;   			R4 - endereço da variável que guarda o estado do objeto 2
+;   			R3 - endereço da variável que guarda o número do ecrã e estado do objeto 1
+;   			R4 - endereço da variável que guarda o número do ecrã estado do objeto 2
 ;				
 ; -------------------------------------------------------------------------------------------------------------------
 animacao_simples:
@@ -468,8 +465,8 @@ verifica_atraso:
 	JNZ fim_rotina_animacao_simples			; Se não for 0, sai da rotina
 
 alterna_objetos:
-	MOV R0, R3								; num do ecrã das luzes da árvore 1 (ecrã 3)
-	MOV R1, R4								; num do ecrã das luzes da árvore 2 (ecrã 4)
+	MOV R0, R3								; endereço da variável que guarda o número do ecrã e estado do objeto 1 (0: desligado, 1: ligado)
+	MOV R1, R4								; endereço da variável que guarda o número do ecrã e estado do objeto 2 (0: desligado, 1: ligado)
 	CALL alterna_entre_dois_objetos			; Argumentos - R0: variável que guarda o num do ecrã e estado do objeto 1, R1: variável que guarda o num do ecrã e estado do objeto 2
 
 fim_rotina_animacao_simples:				; Restaura os registros salvos e retorna à rotina que chamou
@@ -595,27 +592,17 @@ sai_atraso:
 ;			  R4 - número do som associado ao ecrã a ser exibido
 ; -------------------------------------------------------------------------------------------------------------------
 mostra_objeto:
+	PUSH R5
+	
 	MOV [MOSTRA_ECRA], R2				; Mostra o ecrã	
 	MOV R5, 1							; Define o novo estado como "exibido" (1)
 	MOV [R1], R5						; atualiza estado do objeto para exibido (1)
-	
-define_som_do_objeto:
-	CMP R2, 7							; Verifica se o objeto corresponde ao ecrã 7 (Giftbox)
-	JZ reproduz_som						; se o objeto a ser mostrado é o giftbox, reproduz efeito sonoro respetivo 
-	CMP R2, 6							; Verifica se o objeto corresponde ao ecrã 6 (Pai Natal)
-	JZ reproduz_som						; se o objeto a ser mostrado é o pai natal, reproduz efeito sonoro respetivo
-	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
-	JZ reproduz_som						; se o objeto a ser mostrado é a árvore, reproduz efeito sonoro respetivo
-	CMP R2, 2							; Verifica se o objeto corresponde ao ecrã 2 (Letreiro Merry Xmas)
-	JZ reproduz_som						; se o objeto a ser mostrado é o letreiro merry xmas, reproduz efeito sonoro respetivo
-	
-	JMP fim_mostra_objeto				; Finaliza a rotina
 
 reproduz_som:
-	MOV [REPRODUZ_SOM], R4				; Reproduz o som
-	JMP fim_mostra_objeto				; Finaliza a rotina
+	MOV [REPRODUZ_SOM], R4				; Reproduz o som associado ao ecrã
 
 fim_mostra_objeto:						; Restaura os valores dos registradores
+	POP R5
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -633,8 +620,8 @@ esconde_objeto:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; ALTERNA_ENTRE_DOIS_OBJETOS: Rotina que alterna a exibição de dois ecrãs/objetos, consoante o ecrã exibido atualmente, e atualiza as flagas de estado dos objetos.
-; Argumentos: R0 - endereço da variável que guarda o número do ecrã e estado do primeiro objeto
-;			  R1 - endereço da variável que guarda o número do ecrã e estado do segundo objeto
+; Argumentos: R0 - endereço da variável que guarda as informações do objeto (número do ecrã, estado do objeto, som associado)
+;			  R1 - endereço da variável que guarda as informações do objeto (número do ecrã, estado do objeto, som associado)
 ; -------------------------------------------------------------------------------------------------------------------
 alterna_entre_dois_objetos:
 	PUSH R0								; Guarda o valor atual dos registradores na pilha
@@ -686,8 +673,8 @@ fim_rotina_alterna_objetos:				; Restaura os registros salvos e retorna à rotin
 	RET
 	
 ; -------------------------------------------------------------------------------------------------------------------
-; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla na 4ª linha
-;		  do teclado. Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla em qualquer linha do teclado. 
+;			Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
 ; -------------------------------------------------------------------------------------------------------------------
 teclado:
 	PUSH R0								; Salva o valor de R0 na pilha
@@ -756,13 +743,14 @@ sai_teclado:
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; ACOES_TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
-;			ou desativar animações, reproduzir som, selecionar imagem de fundo ou parar todos os sons, entre outras.
+;				  ou desativar animações, reproduzir som, selecionar imagem de fundo ou parar todos os sons, entre outras.
 ; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
 acoes_teclado:
 	PUSH R0								; Salva o valor de R0 na pilha
 	PUSH R1								; Salva o valor de R1 na pilha
 	PUSH R2								; Salva o valor de R2 na pilha
+	PUSH R3
 
 	MOV R0, [linha_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
 	MOV R1, [coluna_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
@@ -772,137 +760,134 @@ acoes_teclado:
 verifica_linha_1:
 	CMP R0, 1							; Verifica se a linha carregada é a linha 1
 	JNZ verifica_linha_2				; Se não for, vai para a verificação da linha 2
+	
+	MOV R3, info_giftbox				; Prepara o endereço da variável que guarda as informações do objeto giftbox (número do ecrã, estado do objeto, som associado)
 	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ ativa_interruptor_giftbox		; Faz a animação do giftbox
+	JZ ativa_interruptor_objeto			; Faz a animação do giftbox
+	
+	MOV R3, info_painatal				; Prepara o endereço da variável que guarda as informações do objeto pai natal (número do ecrã, estado do objeto, som associado)
 	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ ativa_interruptor_painatal		; Faz a animação do pai natal
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
-	JZ ativa_interruptor_arvore			; Faz a animação da arvore
+	JZ ativa_interruptor_objeto			; Faz a animação do pai natal
+	
+	MOV R3, info_arvore					; Prepara o endereço da variável que guarda as informações do objeto árvore de natal (número do ecrã, estado do objeto, som associado)
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
+	JZ ativa_interruptor_objeto			; Faz a animação da arvore
+	
+	MOV R3, info_merryxmas				; Prepara o endereço da variável que guarda as informações do objeto merry xmas (número do ecrã, estado do objeto, som associado)
 	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
-	JZ ativa_interruptor_merryxmas		; Faz a animação do merryxmas
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
+	JZ ativa_interruptor_objeto			; Faz a animação do merryxmas
 
 verifica_linha_2:
 	CMP R0, 2							; Verifica se a linha carregada é a linha 2
 	JNZ verifica_linha_3				; Se não for, vai para a verificação da linha 3
+	
 	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
 	JZ para_som							; Para todos os sons
+	
+	MOV R3, 0							; Prepara o identificador de som 0 para o reproduzir caso a tecla premida seja a coluna 2
 	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ reproduz_som_0					; Reproduz o 1º som
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
-	JZ reproduz_som_1					; Reproduz o 2º som
+	JZ reproduzir_som					; Reproduz o 1º som
+
+	MOV R3, 1							; Prepara o identificador de som 1 para o reproduzir caso a tecla premida seja a coluna 3
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
+	JZ reproduzir_som					; Reproduz o 2º som
+	
+	MOV R3, 2							; Prepara o identificador de som 2 para o reproduzir caso a tecla premida seja a coluna 4
 	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
-	JZ reproduz_som_2					; Reproduz o 3º som 
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
+	JZ reproduzir_som					; Reproduz o 3º som 
 
 verifica_linha_3:
 	CMP R0, 4							; Verifica se a linha carregada é a linha 3
 	JNZ verifica_linha_4				; Se não for, vai para a verificação da linha 4
+	
+	MOV R3, 0							; Prepara o identificador da imagem 0 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 1
 	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ seleciona_imagem_bg_0			; Seleciona a 1º imagem de fundo 
+	JZ seleciona_imagem_bg				; Seleciona a 1º imagem de fundo 
+	
+	MOV R3, 1							; Prepara o identificador da imagem 1 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 2
 	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ seleciona_imagem_bg_1			; Seleciona a 2º imagem de fundo 
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 4
-	JZ seleciona_imagem_bg_2			; Seleciona a 3º imagem de fundo 
+	JZ seleciona_imagem_bg				; Seleciona a 2º imagem de fundo 
+	
+	MOV R3, 2							; Prepara o identificador da imagem 2 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 3
+	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
+	JZ seleciona_imagem_bg				; Seleciona a 3º imagem de fundo 
+	
+	MOV R3, 3							; Prepara o identificador da imagem 3 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 4
 	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 8
-	JZ seleciona_imagem_bg_3			; Seleciona a 4º imagem de fundo 
+	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
+	JZ seleciona_imagem_bg				; Seleciona a 4º imagem de fundo 
 
 verifica_linha_4:
 	MOV R2, 8							; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com k = 8
 	CMP R0, R2							; verifica se nenhuma tecla foi premida na linha 4
 	JNZ sai_rotina_teclado				; Se não for, sai da rotina
+	
 	CMP R1, 1							; verifica se tecla premida é C
-	JZ liga_animacao_neve_e_arvore		; ativa a animação da árvore
+	JZ ativa_animacoes_simples			; ativa as animações simples (neve e luzes)
+	
 	CMP R1, 2							; verifica se tecla premida é D
-	JZ desliga_animacao_neve_e_arvore	; Desativa a animação da neve
+	JZ desativa_animacoes_simples		; desativa as animações simples (neve e luzes)
+	
 	CMP R1, 4							; verifica se tecla premida é E
-	JZ liga_animacao_merryxmas			; ativa a animação da árvore
+	JZ liga_animacao_merryxmas			; liga animação complexa que move o letreiro merry xmas
+	
 	MOV R2, 8							; Prepara o valor 8 para comparação
 	CMP R1, R2							; verifica se tecla premida é F
-	JZ desliga_animacao_merryxmas		; Desativa a animação da árvore
+	JZ desliga_animacao_merryxmas		; desliga animação complexa que move o letreiro merry xmas
 
-; -------------------------------------------------------------------------------------------------------------------
 ; Ações a executar conforme tecla pressionada
-; -------------------------------------------------------------------------------------------------------------------
-ativa_interruptor_giftbox:
-	MOV R1, info_giftbox				; endereço da variável que guarda as informações do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
+ativa_interruptor_objeto:
 	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
 	JMP sai_rotina_teclado
 
-ativa_interruptor_painatal:
-	MOV R1, info_painatal				; endereço da variável que guarda as informações do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
-	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
-	JMP sai_rotina_teclado
+para_som:
+	MOV [PARA_TODOS_SONS], R3			; Comando para parar todos os sons - o valor de R1 é irrelevante
+	JMP sai_rotina_teclado				; Sai da rotina
 
-ativa_interruptor_arvore:
-	MOV R1, info_arvore					; endereço da variável que guarda as informações do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
-	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
-	JMP sai_rotina_teclado
+reproduzir_som:
+	;MOV [PARA_TODOS_SONS], R3			; Comando para parar todos os sons - o valor de R1 é irrelevante. NÃO FUNCIONA!
+										; Por isso, para reproduzir um som, o ideal é parar todos os sons primeiro através da tecla 5 (linha 2, coluna 1)
+	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
+	JMP sai_rotina_teclado				; Sai da rotina
 
-ativa_interruptor_merryxmas:
-	MOV R1, info_merryxmas				; endereço da variável que guarda as informações do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
-	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
-	JMP sai_rotina_teclado
+seleciona_imagem_bg:					
+	MOV [SELECIONA_BG], R3				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
 
-liga_animacao_neve_e_arvore:
-	CALL ativa_animacao_neve_e_arvore
-	JMP sai_rotina_teclado
+ativa_animacoes_simples:
+	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
+	CALL ativa_animacao_simples			; Ativa a animação da neve
+	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
+	CALL ativa_animacao_simples			; Ativa a animação das luzes
+	MOV R3, 7							; Define o id do som a reproduzir
+	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
+	JMP sai_rotina_teclado				; Sai da rotina
 
-desliga_animacao_neve_e_arvore:
-	CALL desativa_animacao_neve_e_arvore
-	JMP sai_rotina_teclado
+desativa_animacoes_simples:
+	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
+	CALL desativa_animacao_simples		; Ativa a animação da neve
+	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
+	CALL desativa_animacao_simples		; Ativa a animação das luzes
+	JMP sai_rotina_teclado				; Sai da rotina
 
 liga_animacao_merryxmas:
-	CALL desativa_animacao_neve_e_arvore
-	CALL ativa_animacao_merryxmas
+	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados na animação da neve
+	CALL desativa_animacao_simples		; Desativa a animação da neve para melhor fluidez da animação complexa
+	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados na animação das luzes
+	CALL desativa_animacao_simples		; Desativa a animação das luzes para melhor fluidez da animação complexa
+	MOV R3, 1							; Define a flag de animação do merryxmas como ativa
+	MOV [animacao_merryxmas], R3		; Guarda o valor da flag (1) na variável que determina a execução da animação do merryxmas
 	JMP sai_rotina_teclado
 
 desliga_animacao_merryxmas:
-	CALL desativa_animacao_merryxmas
+	MOV R3, 0							; Define a flag de animação do merryxmas como desativada (0)
+	MOV [animacao_merryxmas], R3		; Guarda o valor da flag (0) na variável que determina a execução da animação do merryxmas
 	JMP sai_rotina_teclado
 
-seleciona_imagem_bg_0:					
-	MOV R1, 0							; Define a 1º imagem de fundo
-	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
-	JMP sai_rotina_teclado				; Sai da rotina
-
-seleciona_imagem_bg_1:				
-	MOV R1, 1							; Define a 2º imagem de fundo 
-	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
-	JMP sai_rotina_teclado				; Sai da rotina
-
-seleciona_imagem_bg_2:					
-	MOV R1, 2							; Define a 3º imagem de fundo
-	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
-	JMP sai_rotina_teclado				; Sai da rotina
-
-seleciona_imagem_bg_3:			
-	MOV R1, 3							; Define a 4º imagem de fundo
-	MOV [SELECIONA_BG], R1				; Atualiza a seleção de imagem de fundo
-	JMP sai_rotina_teclado				; Sai da rotina
-
-reproduz_som_0:
-	MOV R1, 0							; Definimos o som zero para ser reproduzido
-	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
-	JMP sai_rotina_teclado				; Sai da rotina
-
-reproduz_som_1:
-	MOV R1, 1							; Definimos o som zero para ser reproduzido
-	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
-	JMP sai_rotina_teclado				; Sai da rotina
-
-reproduz_som_2:
-	MOV R1, 2							; Definimos o som zero para ser reproduzido
-	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
-	JMP sai_rotina_teclado				; Sai da rotina
-
-para_som:
-	MOV R1, 0							; Define o comando para parar todos os sons
-	MOV [PARA_TODOS_SONS], R1			; Comando para parar todos os sons
-	JMP sai_rotina_teclado				; Sai da rotina
-
 sai_rotina_teclado:						; Restaura os valores dos registradores
+	POP  R3
 	POP  R2
 	POP  R1
     POP  R0
@@ -911,12 +896,15 @@ sai_rotina_teclado:						; Restaura os valores dos registradores
 ; -------------------------------------------------------------------------------------------------------------------
 ; INTERRUPTOR_OBJETO - Rotina que mostra ou oculta um ecrã/objeto mediante carregamento da tecla correspondente e de acordo com o seu estado atual
 ;  					 - (mostrado/ocultado) e efeito sonoro associado ao objeto
-; Argumentos: 	  R1 - endereço da variável que guarda informação do objeto a mostrar/ocultar define o ecrã e estado do objeto (exibido/ocultado)
+; Argumentos: 	  R3 - endereço da variável que guarda informação do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
 ; -------------------------------------------------------------------------------------------------------------------
 interruptor_objeto:
+	PUSH R1
 	PUSH R2
 	PUSH R3
 	PUSH R4
+
+	MOV R1, R3							; Guarda o endereço da variável info_[nome_objeto] na variável R1
 
 	MOV R2, [R1]						; obtém o número do ecrã a ser mostrado/ocultado
 	ADD R1, 2							; avança para a próxima palavra para obter o estado do objeto (mostrado/ocultado)
@@ -939,72 +927,59 @@ oculta_objeto:
 	CALL esconde_objeto					; Oculta o objeto.Argummentos: 
 										; R1 - 2ª palavra da variável info_merryxmas (estado do objeto)
 										; R2 - número do ecrã a ocultar
+
+	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
+	JZ desativa_luzes_se_arvore			; Se o objeto corresponder à árvore, desativa a animação das luzes
     JMP fim_interruptor					; Sai da rotina
+
+desativa_luzes_se_arvore:
+	MOV R3, 0							; Define a flag de animação da árvore como inativa
+	MOV [animacao_luzes], R3			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV R3, 3							; Define o ecra das luzes 1
+	MOV [ESCONDE_ECRA], R3				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
+	MOV R3, 4							; Define o ecra das luzes 2
+	MOV [ESCONDE_ECRA], R3				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
+	JMP fim_interruptor					; Sai da rotina
 
 fim_interruptor:
 	POP R4
 	POP R3
 	POP R2
-	RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; ativa_animacao_neve_e_arvore - Rotina que ativa a animação da neve e luzes a piscar
-; Argumentos: Nenhum
-; -------------------------------------------------------------------------------------------------------------------
-ativa_animacao_neve_e_arvore:
-	PUSH R1
-	PUSH R2
-	MOV R1, 0							; Define o ecra da neve
-	MOV R1, 1							; Define a flag de animação da neve como ativa
-	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	MOV [animacao_luzes], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	MOV R1, 7
-	MOV [INICIA_SOM], R1				; Comando para iniciar a reprodução do som especificado em loop
-	POP R2
 	POP R1
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; desativa_animacao_neve_e_arvore - Rotina que desativa as animações da neve e luzes a piscar
-; Argumentos: Nenhum
+; ATIVA_ANIMACAO_SIMPLES - Rotina que ativa a animação simples (neve e/ou luzes a piscar - alternam entre dois objetos)
+; Argumentos: 		  R3 - endereço da variável (animacao_neve, animacao_luzes) que guarda estado da animação e ecrãs utilizados
 ; -------------------------------------------------------------------------------------------------------------------
-desativa_animacao_neve_e_arvore:
+ativa_animacao_simples:
 	PUSH R1
-	
+	MOV R1, 1							; Define a flag de animação da neve como ativa (1)
+	MOV [R3], R1						; altera flag que indica que animação deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+	POP R1
+	RET
+
+; -------------------------------------------------------------------------------------------------------------------
+; DESATIVA_ANIMACAO_SIMPLES - Rotina que desativa a animação simples (neve e/ou luzes a piscar - alternam entre dois objetos)
+; Argumentos: 		  R3 - endereço da variável (animacao_neve, animacao_luzes) que guarda estado da animação e ecrãs utilizados
+; -------------------------------------------------------------------------------------------------------------------
+desativa_animacao_simples:
+	PUSH R1
 	MOV R1, 0							; Define a flag de animação da neve como inativa
-	MOV [animacao_neve], R1				; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
-	MOV [animacao_luzes], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
+	MOV [R3], R1						; altera flag que indica que animação da neve deve ser executada para 0 (0 = não executa animação, 1 = executa animação)
 	
+	ADD R3, 2							; Avança para a próxima palavra da variável para obter o número do primeiro ecrã usado na animação
+	MOV R1, [R3]						; obtém o número do ecrã para que seja ocultado
 	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 1
-	MOV R1, 1							; Definimos o ecra da neve
+	
+	ADD R3, 2							; Avança para a próxima palavra da variável para obter o número do segundo ecrã usado na animação
+	MOV R1, [R3]						; obtém o número do ecrã para que seja ocultado
 	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
-	MOV R1, 3							; Definimos o ecra das luzes 1
-	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
-	MOV R1, 4							; Definimos o ecra das luzes 2
-	MOV [ESCONDE_ECRA], R1				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
-	MOV [PARA_TODOS_SONS], R1			; Para todos os sons
 	
 	POP R1
 	RET
 
-; -------------------------------------------------------------------------------------------------------------------
-; ativa_animacao_merryxmas - Rotina que ativa a animação do letreiro merry xmas
-; Argumentos: Nenhum
-; -------------------------------------------------------------------------------------------------------------------
-ativa_animacao_merryxmas:
-	PUSH R1
-	MOV R1, 1							; Define a flag de animação da árvore como ativa
-	MOV [animacao_merryxmas], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
-	POP R1
-	RET
-
-; -------------------------------------------------------------------------------------------------------------------
-; desativa_animacao_merryxmas - Rotina que desativa a animação do letreiro merry xmas
-; Argumentos: Nenhum
-; -------------------------------------------------------------------------------------------------------------------
-desativa_animacao_merryxmas:
-	PUSH R1
-	MOV R1, 0							; Define a flag de animação da árvore como ativa
-	MOV [animacao_merryxmas], R1			; altera flag que indica que animação das luzes da árvore deve ser executada para 1 (0 = não executa animação, 1 = executa animação)
+fim_interruptor_animacao_simples:
+	POP R3
 	POP R1
 	RET
