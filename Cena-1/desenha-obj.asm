@@ -91,11 +91,10 @@ animacao_luzes:			; flag para determinar se é para executar animação das luze
 	WORD 0, 3, 4 	
 
 animacao_merryxmas:			; variável que guarda informações relativas à animação do letreiro merryxmas
-	WORD 0, 1, 5, 1, 5		; 1ª palavra: flag para determinar se é para executar animação do letreiro merryxmas (0: não, 1: sim)
+	WORD 0, 1, 5, 5			; 1ª palavra: flag para determinar se é para executar animação do letreiro merryxmas (0: não, 1: sim)
 							; 2ª palavra: incremento ou decremento da coluna do objeto merryxmas (-1 ou 1)
 							; 3ª palavra: flag que indica número de colunas para mover o objeto merryxmas (5 inicialmente, depois 10 para cada lado)
-							; 4ª palavra: flag que indica a direção da animação (-1: direita para esquerda, 1: esquerda para direita)
-							; 5ª palavra: flag que indica a coluna inicial do objeto merryxmas (5)
+							; 4ª palavra: flag que indica a coluna inicial do objeto merryxmas (5)
 
 contador_atraso_neve:
 	WORD DELAY_ANIMACAO_SIMPLES		; contador usado para gerar o atraso entre os movimentos dos objetos da neve
@@ -469,37 +468,33 @@ fim_rotina_animacao_simples:				; Restaura os registros salvos e retorna à roti
 	RET
 
 ; -------------------------------------------------------------------------------------------------------------------
-; ANIMA_MERRYXMAS - Executa uma animação simples do letreiro merry xmas, alternando entre 
-; 				 objetos de luzes de natal de forma não bloqueante
+; ANIMACAO_COMPLEXA_MERRYXMAS - Executa uma animação complexa do letreiro merry xmas, movendo-o para a esquerda e direita
 ; Argumentos:  Nenhum
-;				
 ; -------------------------------------------------------------------------------------------------------------------
 animacao_complexa_merryxmas:
-	PUSH R0
-    PUSH R1                                 ; Salva o conteúdo de R1					
-    PUSH R2                                 ; Salva o conteúdo de R2
+	PUSH R0									; Salva o conteúdo dos registos na stack
+    PUSH R1					
+    PUSH R2                                 
 	PUSH R3
     PUSH R4
 	PUSH R5
 	PUSH R6
     PUSH R7
 
-verifica_atraso_merryxmas:
+verifica_atraso_merryxmas:					; Verifica se o atraso da animação merryxmas já terminou. Se não, sai da rotina.
 	MOV R0, contador_atraso_merryxmas		; endereço da variável que guarda o atraso
 	MOV R2, DELAY_ANIMACAO_COMPLEXA			; valor do atraso para a animações complexa - é mais rápida para que o movimento do objeto seja mais suave
     CALL atraso                   			; Chama a rotina para verificar atraso
     CMP R1, 0                               ; Compara o resultado da verificação
     JNZ fim_rotina_merryxmas                ; Se não for 0 (ainda em atraso), sai da rotina
 
-desenha_objeto_merryxmas:
-	; Desenha o objeto merryxmas
+desenha_objeto_merryxmas:					; Desenha o objeto merryxmas
     MOV R1, 2                               ; num do ecrã do merryxmas
     MOV [SELECIONA_ECRA], R1                ; seleciona ecrã merryxmas
     MOV R4, merry_xmas                      ; endereço da tabela que define o objeto merryxmas
     CALL desenha_objeto						; desenha o objeto merryxmas
 
-atualiza_coluna:
-	; obtém coluna atual do objeto merryxmas
+atualiza_coluna:							; obtém coluna atual do objeto merryxmas e atualiza-a
     MOV R1, merry_xmas						; guarda no registo novamente o endereço da tabela que define o objeto merryxmas, pois o valor de R4 foi alterado na rotina desenha_objeto
     ADD R1, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
     MOV R2, [R1]                            ; obtem num da coluna do objeto
@@ -521,13 +516,13 @@ atualiza_coluna:
 	CMP R5, 0                               ; compara o número de colunas a mover com 0
     JNZ fim_rotina_merryxmas                ; se ainda há colunas a mover, sai da rotina
 
-obtem_direcao_e_inverte:
-	ADD R3, 2								; avança para a 4ª palavra da tabela que contém as informações da animação do objeto merryxmas
-	MOV R6, [R3]							; obtem a direção do movimento do objeto merryxmas (-1: esquerda, 1: direita)
-    NEG R6                                  ; inverte a direção do movimento (1 <> -1)
+obtem_direcao_e_inverte:					; obtém a direção do movimento do objeto merryxmas e inverte-a quando esgota o movimento numa direção (-1 <> 1)
+	SUB R3, 2								; volta para a 2ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	MOV R6, [R3]                            ; obtem a direção do movimento do objeto merryxmas (-1 ou 1)
+	NEG R6									; inverte a direção do movimento
     MOV [R3], R6                            ; atualiza a direção do movimento do objeto merryxmas para -1
 	MOV R7, 10                              ; reinicia o número de colunas a mover para 10
-	SUB R3, 2								; volta para a 3ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	ADD R3, 2								; avança para a 3ª palavra da tabela que contém as informações da animação do objeto merryxmas
 	MOV [R3], R7                            ; atualiza o número de colunas a mover para 10
 
 fim_rotina_merryxmas:                       ; Restaura os registros salvos e retorna ao programa principal
@@ -618,11 +613,13 @@ alterna_entre_dois_objetos:
 	PUSH R4
 	PUSH R5
 	PUSH R6
-											
+
+	; Obtém dados do primeiro objeto a partir da variável de estado											
 	MOV R2, [R0]						; Carrega o número do ecrã do primeiro objeto obtido a partir da variável de estado
 	ADD R0, 2							; Avança para a próxima palavra da tabela, para obter o estado (0: oculto, 1: exibido)
-	MOV R3, [R0]						; Carrega o estado do primeiro objeto
-
+	MOV R3, [R0]						; Carrega o estado do primeiro objeto em R3
+	
+	; Obtém dados do segundo objeto a partir da variável de estado
 	MOV R4, [R1]						; Carrega o número do ecrã do segundo objeto obtido a partir da variável de estado
 	ADD R1, 2							; Avança para a próxima palavra da tabela, para obter o estado (0: oculto, 1: exibido)
 	MOV R5, [R1]						; Carrega o estado do segundo objeto
@@ -630,7 +627,7 @@ alterna_entre_dois_objetos:
 	CMP R3, 0							; Verifica se o primeiro objeto está oculto
 	JNZ mostra_obj_2					; Se sim, chama a rotina para exibir objeto 1
 
-mostra_obj_1:							
+mostra_obj_1:							; Mostra o primeiro objeto e atualiza as flags de estado de ambos os objetos
 	MOV [MOSTRA_ECRA], R2				; Comando para mostrar o ecrã do objeto 1
 	MOV [ESCONDE_ECRA], R4				; Comando para esconder o ecrã do objeto 2
 	MOV R6, 1							; Atualiza a flag para indicar que o primeiro objeto está exibido
@@ -639,7 +636,7 @@ mostra_obj_1:
 	MOV [R1], R6						; Salva a flag atualizada
 	JMP fim_rotina_alterna_objetos		; Sai da rotina
 
-mostra_obj_2:								
+mostra_obj_2:							; Mostra o segundo objeto e atualiza as flags de estado de ambos os objetos	
 	MOV [ESCONDE_ECRA], R2				; Comando para esconder o ecrã do objeto 1
 	MOV [MOSTRA_ECRA], R4				; Comando para mostrar o ecrã do objeto 2
 	MOV R6, 0							; Atualiza a flag para indicar que o primeiro objeto está oculto
@@ -879,9 +876,6 @@ desliga_animacao_merryxmas:
 	MOV R1, 5							; Guarda o valor 5 em R1
 	MOV [R0], R1						; Restabelece o valor do número de colunas para mover o objeto merryxmas para 5
 	ADD R0, 2							; Avança para a 4ª palavra da variável que guarda as informações do objeto merryxmas
-	MOV R1, 1							; Guarda o valor 1 em R1
-	MOV [R0], R1						; Restabelece o valor da flag que indica a direção da animação do objeto merryxmas para 1
-	ADD R0, 2							; Avança para a 5ª palavra da variável que guarda as informações do objeto merryxmas
 	MOV R1, [R0]						; Obtém o valor inicial da coluna do objeto merry xmas para repor no caso de se voltar a ativar a animação
 
 	; Restabelece a coluna do objeto merryxmas para a posição inicial 
