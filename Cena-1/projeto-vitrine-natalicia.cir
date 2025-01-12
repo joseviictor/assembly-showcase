@@ -609,7 +609,7 @@
     "simGuiXRelative" : 0,
     "simGuiYRelative" : 0,
     "simGuiWidth" : 794,
-    "simGuiHeight" : 830,
+    "simGuiHeight" : 876,
     "clockPeriod" : 500,
     "startAutomatically" : false,
     "simulationMaster" : true,
@@ -638,7 +638,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "desenha-obj.asm",
+    "programFilePathName" : "vitrine_natalicia.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
