@@ -43,7 +43,7 @@ MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
 DELAY_ANIMACAO_SIMPLES	EQU 0A0H				; valor usado para implementar um atraso temporal (0A0H = 160)
-DELAY_ANIMACAO_COMPLEXA	EQU 010H				; valor usado para implementar um atraso temporal (0F0H = 32)
+DELAY_ANIMACAO_COMPLEXA	EQU 010H				; valor usado para implementar um atraso temporal (010H = 16)
 
 ; ####################################################################################################################
 ; # ZONA DE DADOS 
@@ -55,7 +55,7 @@ DELAY_ANIMACAO_COMPLEXA	EQU 010H				; valor usado para implementar um atraso tem
 SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve ser inicializado
 
 ; -------------------------------------------------------------------------------------------------------------------
-; # variáveis para guardar a posição do objeto
+; # variáveis para guardar o estado do teclado
 ; -------------------------------------------------------------------------------------------------------------------
 linha_carregada:
 	WORD 0				; variável que indica se uma tecla foi carregada
@@ -67,7 +67,7 @@ coluna_carregada:
 						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
 
 ; -------------------------------------------------------------------------------------------------------------------
-; # variáveis para guardar a posição do objeto
+; # variáveis para guardar a dimensão e posição do objeto
 ; -------------------------------------------------------------------------------------------------------------------
 linha:
 	WORD 0				; espaço reservado para guardar a linha do objeto
@@ -90,8 +90,12 @@ animacao_neve:			; flag para determinar se é para executar animação da neve e
 animacao_luzes:			; flag para determinar se é para executar animação das luzes e guardar o número dos ecrãs utilizados (3 e 4)
 	WORD 0, 3, 4 	
 
-animacao_merryxmas:		; flag para determinar se é para executar animação do letreiro merryxmas
-	WORD 0
+animacao_merryxmas:			; variável que guarda informações relativas à animação do letreiro merryxmas
+	WORD 0, 1, 5, 1, 5		; 1ª palavra: flag para determinar se é para executar animação do letreiro merryxmas (0: não, 1: sim)
+							; 2ª palavra: incremento ou decremento da coluna do objeto merryxmas (-1 ou 1)
+							; 3ª palavra: flag que indica número de colunas para mover o objeto merryxmas (5 inicialmente, depois 10 para cada lado)
+							; 4ª palavra: flag que indica a direção da animação (-1: direita para esquerda, 1: esquerda para direita)
+							; 5ª palavra: flag que indica a coluna inicial do objeto merryxmas (5)
 
 contador_atraso_neve:
 	WORD DELAY_ANIMACAO_SIMPLES		; contador usado para gerar o atraso entre os movimentos dos objetos da neve
@@ -364,29 +368,18 @@ seleciona_ecra:
 	MOV [SELECIONA_ECRA], R7				; seleciona ecrã (um para cada objeto)
 
 verifica_ecra_atual:
-	CMP R7, 0								; se for o ecrã 0 - neve_0
-	JZ esconde_neve							; esconde neve_0
-	CMP R7, 1								; se for o ecrã 1 - neve_1
-	JZ esconde_neve							; esconde neve_1
-	CMP R7, 3								; se for o ecrã 3 - luzes_arvore_0
-	JZ esconde_luzes_arvore					; esconde luzes_arvore_0
-	CMP R7, 4 								; se for o ecrã 4 - luzes_arvore_1
-	JZ esconde_luzes_arvore					; esconde luzes_arvore_1
+	CMP R7, 0								; se for o ecrã 0 (neve0)
+	JZ esconde_ecra_atual					; esconde ecrã 0
+	CMP R7, 1								; se for o ecrã 1 (neve1)
+	JZ esconde_ecra_atual					; esconde ecrã 1
+	CMP R7, 3								; se for o ecrã 3 (luzes0)
+	JZ esconde_ecra_atual					; esconde ecrã 3
+	CMP R7, 4 								; se for o ecrã 4 (luzes1)
+	JZ esconde_ecra_atual					; esconde ecrã 4
 	JMP desenhar_objeto_atual				; se não for nenhum dos ecrãs acima, não oculta o ecrã e desenha o objeto normalmente
 
-esconde_neve:
-	MOV R8, 0								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	MOV R8, 1								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_objeto_atual				; reinicia a coluna para desenhar o próximo objeto
-
-esconde_luzes_arvore:
-	MOV R8, 3								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	MOV R8, 4								; num do ecrã a esconder
-	MOV [ESCONDE_ECRA], R8					; comando do MediaCenter para esconder o ecrã
-	JMP desenhar_objeto_atual				; reinicia a coluna para desenhar o próximo objeto
+esconde_ecra_atual:
+	MOV [ESCONDE_ECRA], R7					; comando do MediaCenter para esconder o ecrã
 
 desenhar_objeto_atual:
 	CALL desenha_objeto						; Desenha o objeto atual. Argumentos: R4 - tabela que define o objeto a desenhar
@@ -483,72 +476,66 @@ fim_rotina_animacao_simples:				; Restaura os registros salvos e retorna à roti
 ; -------------------------------------------------------------------------------------------------------------------
 animacao_complexa_merryxmas:
 	PUSH R0
-    PUSH R1                                 ; Salva o conteúdo de R1
+    PUSH R1                                 ; Salva o conteúdo de R1					
     PUSH R2                                 ; Salva o conteúdo de R2
+	PUSH R3
     PUSH R4
+	PUSH R5
+	PUSH R6
     PUSH R7
-    PUSH R8                                 ; Salva o conteúdo de R8 (direção)
-    PUSH R9                                 ; Salva o conteúdo de R9 (estado da animação)
-    PUSH R10                                ; Salva o conteúdo de R10 (posição inicial)
 
-    ; Verifica se a animação já foi inicializada
-    CMP R10, 0
-    JNZ continuar_animacao
-
-    ; Inicializa a animação
-    MOV R7, 5                               ; num total de colunas a mover
-    MOV R8, 1                               ; 1 para mover para a direita, -1 para mover para a esquerda
-    MOV R4, merry_xmas
-    ADD R4, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
-    MOV R10, [R4]                           ; salva a posição inicial da coluna
-    MOV [R4], R10                           ; inicializa a posição da coluna
-    MOV R9, 0                               ; inicializa o estado da animação
-
-continuar_animacao:
-    ; Verifica se o atraso necessário para a animação foi atingido
+verifica_atraso_merryxmas:
 	MOV R0, contador_atraso_merryxmas		; endereço da variável que guarda o atraso
 	MOV R2, DELAY_ANIMACAO_COMPLEXA			; valor do atraso para a animações complexa - é mais rápida para que o movimento do objeto seja mais suave
     CALL atraso                   			; Chama a rotina para verificar atraso
     CMP R1, 0                               ; Compara o resultado da verificação
     JNZ fim_rotina_merryxmas                ; Se não for 0 (ainda em atraso), sai da rotina
 
+desenha_objeto_merryxmas:
+	; Desenha o objeto merryxmas
     MOV R1, 2                               ; num do ecrã do merryxmas
     MOV [SELECIONA_ECRA], R1                ; seleciona ecrã merryxmas
     MOV R4, merry_xmas                      ; endereço da tabela que define o objeto merryxmas
-    CALL desenha_objeto
+    CALL desenha_objeto						; desenha o objeto merryxmas
 
-    MOV R4, merry_xmas
-    ADD R4, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
-    MOV R2, [R4]                            ; obtem num da coluna do objeto
-    ADD R2, R8                              ; incrementa ou decrementa coluna em 1 pixel
-    MOV [R4], R2                            ; guarda novo número da coluna
-    SUB R7, 1                               ; decrementa o número de colunas a mover
+atualiza_coluna:
+	; obtém coluna atual do objeto merryxmas
+    MOV R1, merry_xmas						; guarda no registo novamente o endereço da tabela que define o objeto merryxmas, pois o valor de R4 foi alterado na rotina desenha_objeto
+    ADD R1, 2                               ; avança para a próxima palavra da tabela que define o objeto merryxmas
+    MOV R2, [R1]                            ; obtem num da coluna do objeto
+    
+	; obtém o valor a somar à coluna para incrementar ou decrementar (1 ou -1)
+	MOV R3, animacao_merryxmas				; endereço da variável que guarda informações da animação merryxmas
+	ADD R3, 2								; avança para a 2ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	MOV R4, [R3]							; obtem o valor a adicionar à coluna do objeto merryxmas (1 ou -1)
+
+	; incrementa ou decrementa a coluna do objeto merryxmas e guarda o novo valor na tabela que define o objeto
+	ADD R2, R4                              ; incrementa ou decrementa coluna em 1 pixel
+    MOV [R1], R2                            ; guarda novo número da coluna
+    
+	; verifica se o objeto já avançou as colunas definidas para o movimento completo
+	ADD R3, 2								; avança para a 3ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	MOV R5, [R3]							; obtem o número de colunas a mover
+	SUB R5, 1                               ; decrementa o número de colunas a mover
+	MOV [R3], R5                            ; guarda o novo número de colunas restantes para mover neste ciclo do movimento
+	CMP R5, 0                               ; compara o número de colunas a mover com 0
     JNZ fim_rotina_merryxmas                ; se ainda há colunas a mover, sai da rotina
 
-    ; Inverte a direção e ajusta o número de colunas a mover
-    CMP R9, 0
-    JZ move_esquerda                        ; se estava movendo para a direita, agora move para a esquerda
-    CMP R9, 1
-    JZ move_direita                         ; se estava movendo para a esquerda, agora move para a direita
-
-move_esquerda:
-    MOV R7, 10                              ; reinicia o número de colunas a mover para 10
-    NEG R8                                  ; inverte a direção para a esquerda
-    MOV R9, 1                               ; atualiza o estado da animação para mover para a esquerda
-    JMP fim_rotina_merryxmas                ; sai da rotina para permitir que outras rotinas sejam executadas
-
-move_direita:
-    MOV R7, 10                              ; reinicia o número de colunas a mover para 10
-    NEG R8                                  ; inverte a direção para a direita
-    MOV R9, 0                               ; atualiza o estado da animação para mover para a direita
-    JMP fim_rotina_merryxmas                ; sai da rotina para permitir que outras rotinas sejam executadas
+obtem_direcao_e_inverte:
+	ADD R3, 2								; avança para a 4ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	MOV R6, [R3]							; obtem a direção do movimento do objeto merryxmas (-1: esquerda, 1: direita)
+    NEG R6                                  ; inverte a direção do movimento (1 <> -1)
+    MOV [R3], R6                            ; atualiza a direção do movimento do objeto merryxmas para -1
+	MOV R7, 10                              ; reinicia o número de colunas a mover para 10
+	SUB R3, 2								; volta para a 3ª palavra da tabela que contém as informações da animação do objeto merryxmas
+	MOV [R3], R7                            ; atualiza o número de colunas a mover para 10
 
 fim_rotina_merryxmas:                       ; Restaura os registros salvos e retorna ao programa principal
-    POP R10
-    POP R9
-    POP R8
     POP R7
+	POP R6
+	POP R5
     POP R4
+	POP R3
     POP R2
     POP R1
 	POP R0
@@ -641,8 +628,7 @@ alterna_entre_dois_objetos:
 	MOV R5, [R1]						; Carrega o estado do segundo objeto
 
 	CMP R3, 0							; Verifica se o primeiro objeto está oculto
-	JZ mostra_obj_1						; Se sim, chama a rotina para exibir objeto 1
-	JMP mostra_obj_2					; Se não, chama a rotina para exibir objeto 2
+	JNZ mostra_obj_2					; Se sim, chama a rotina para exibir objeto 1
 
 mostra_obj_1:							
 	MOV [MOSTRA_ECRA], R2				; Comando para mostrar o ecrã do objeto 1
@@ -694,7 +680,6 @@ testa_linha_1:
 	AND  R0, R5				 			; elimina bits para além dos bits 0-3
 	CMP  R0, 0               			; há tecla premida?
 	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
-	JMP testa_linha_2					; Se não, testa a próxima linha
 
 testa_linha_2:
 	MOV  R1, 2				 			; testar a linha 2 
@@ -703,7 +688,6 @@ testa_linha_2:
 	AND  R0, R5				 			; elimina bits para além dos bits 0-3
 	CMP  R0, 0               			; há tecla premida?
 	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
-	JMP testa_linha_3					; Se não, testa a próxima linha
 
 testa_linha_3:
 	MOV  R1, 4				 			; testar a linha 3 
@@ -712,7 +696,6 @@ testa_linha_3:
 	AND  R0, R5				 			; elimina bits para além dos bits 0-3
 	CMP  R0, 0               			; há tecla premida?
 	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
-	JMP testa_linha_4					; Se não, testa a linha 4
 
 testa_linha_4:
 	MOV  R1, 8				 			; testar a linha 4 
@@ -750,7 +733,8 @@ acoes_teclado:
 	PUSH R0								; Salva o valor de R0 na pilha
 	PUSH R1								; Salva o valor de R1 na pilha
 	PUSH R2								; Salva o valor de R2 na pilha
-	PUSH R3
+	PUSH R3 							; Salva o valor de R3 na pilha
+	PUSH R4 							; Salva o valor de R4 na pilha
 
 	MOV R0, [linha_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
 	MOV R1, [coluna_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
@@ -882,11 +866,37 @@ liga_animacao_merryxmas:
 	JMP sai_rotina_teclado
 
 desliga_animacao_merryxmas:
-	MOV R3, 0							; Define a flag de animação do merryxmas como desativada (0)
-	MOV [animacao_merryxmas], R3		; Guarda o valor da flag (0) na variável que determina a execução da animação do merryxmas
+	; Desativa a animação do merryxmas
+	MOV R0, animacao_merryxmas			; obtém o endereço da variável que guarda as informações da animação do merryxmas
+	MOV R1, 0							; Guarda o valor 0 em R1
+	MOV [R0], R1						; Guarda o valor da flag (0) na variável que determina a execução da animação do merryxmas
+
+	; Restabelece os valores iniciais da animação do merryxmas
+	ADD R0, 2							; Avança para a 2ª palavra da variável que guarda as informações do objeto merryxmas
+	MOV R1, 1							; Guarda o valor 1 em R1
+	MOV [R0], R1						; Restabelece o valor do incremento/decremento da coluna do objeto merryxmas para 1
+	ADD R0, 2							; Avança para a 3ª palavra da variável que guarda as informações do objeto merryxmas
+	MOV R1, 5							; Guarda o valor 5 em R1
+	MOV [R0], R1						; Restabelece o valor do número de colunas para mover o objeto merryxmas para 5
+	ADD R0, 2							; Avança para a 4ª palavra da variável que guarda as informações do objeto merryxmas
+	MOV R1, 1							; Guarda o valor 1 em R1
+	MOV [R0], R1						; Restabelece o valor da flag que indica a direção da animação do objeto merryxmas para 1
+	ADD R0, 2							; Avança para a 5ª palavra da variável que guarda as informações do objeto merryxmas
+	MOV R1, [R0]						; Obtém o valor inicial da coluna do objeto merry xmas para repor no caso de se voltar a ativar a animação
+
+	; Restabelece a coluna do objeto merryxmas para a posição inicial 
+	MOV R2, merry_xmas					; Prepara o endereço da tabela que define o objeto merryxmas
+	ADD R2, 2							; Avança para a 2ª palavra da tabela que define o objeto merryxmas
+	MOV [R2], R1						; Guarda o valor inicial da coluna do objeto merryxmas
+
+	; Redesenha o objeto merryxmas na posição inicial
+	MOV R4, merry_xmas					; Prepara o endereço da tabela que define o objeto merryxmas
+	CALL desenha_objeto					; Desenha o objeto merryxmas na posição inicial
+
 	JMP sai_rotina_teclado
 
 sai_rotina_teclado:						; Restaura os valores dos registradores
+	POP  R4
 	POP  R3
 	POP  R2
 	POP  R1
@@ -895,7 +905,7 @@ sai_rotina_teclado:						; Restaura os valores dos registradores
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; INTERRUPTOR_OBJETO - Rotina que mostra ou oculta um ecrã/objeto mediante carregamento da tecla correspondente e de acordo com o seu estado atual
-;  					 - (mostrado/ocultado) e efeito sonoro associado ao objeto
+;  					 - (mostrado/ocultado) e reproduz efeito sonoro associado ao objeto
 ; Argumentos: 	  R3 - endereço da variável que guarda informação do objeto a mostrar/ocultar (num do ecrã, estado do objeto, som associado)
 ; -------------------------------------------------------------------------------------------------------------------
 interruptor_objeto:
@@ -913,8 +923,7 @@ interruptor_objeto:
 	MOV R4, [R1]						; obtém o identificador do som associado ao objeto
 	SUB R1, 2							; Retrocede para a 2ª palavra da variável info_giftbox (estado do objeto)
 	CMP R3, 0							; verifica se objeto está ocultado
-	JZ exibe_objeto						; Se estiver ocultado (0), vai para a rotina que exibe o objeto
-	JMP oculta_objeto					; Caso contrário, oculta o objeto
+	JNZ oculta_objeto					; Se estiver ocultado (0), vai para a rotina que exibe o objeto
 
 exibe_objeto:
 	CALL mostra_objeto					; Exibe o objeto. Argumentos:
@@ -924,13 +933,12 @@ exibe_objeto:
     JMP fim_interruptor					; Sai da rotina
 
 oculta_objeto:
-	CALL esconde_objeto					; Oculta o objeto.Argummentos: 
+	CALL esconde_objeto					; Oculta o objeto. Argummentos: 
 										; R1 - 2ª palavra da variável info_merryxmas (estado do objeto)
 										; R2 - número do ecrã a ocultar
 
 	CMP R2, 5							; Verifica se o objeto corresponde ao ecrã 5 (Árvore de Natal)
-	JZ desativa_luzes_se_arvore			; Se o objeto corresponder à árvore, desativa a animação das luzes
-    JMP fim_interruptor					; Sai da rotina
+	JNZ fim_interruptor					; Se o objeto corresponder à árvore, desativa a animação das luzes, se não, sai da rotina
 
 desativa_luzes_se_arvore:
 	MOV R3, 0							; Define a flag de animação da árvore como inativa
@@ -939,7 +947,6 @@ desativa_luzes_se_arvore:
 	MOV [ESCONDE_ECRA], R3				; comando do media center para ocultar o ecrã que possui o objeto das luzes 1
 	MOV R3, 4							; Define o ecra das luzes 2
 	MOV [ESCONDE_ECRA], R3				; comando do media center para ocultar o ecrã que possui o objeto das luzes 2
-	JMP fim_interruptor					; Sai da rotina
 
 fim_interruptor:
 	POP R4
@@ -976,10 +983,5 @@ desativa_animacao_simples:
 	MOV R1, [R3]						; obtém o número do ecrã para que seja ocultado
 	MOV [ESCONDE_ECRA], R1				; comando do media center ocultar o ecrã que possui o objeto da neve 2
 	
-	POP R1
-	RET
-
-fim_interruptor_animacao_simples:
-	POP R3
 	POP R1
 	RET
