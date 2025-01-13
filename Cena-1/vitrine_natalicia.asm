@@ -43,7 +43,7 @@ MASCARA					EQU	0FH					; para isolar os 4 bits de menor peso, ao ler as colunas
 NUM_ECRAS				EQU 7					; número de ecrãs 0-7 (8 no total)
 
 DELAY_ANIMACAO_SIMPLES	EQU 0A0H				; valor usado para implementar um atraso temporal (0A0H = 160)
-DELAY_ANIMACAO_COMPLEXA	EQU 010H				; valor usado para implementar um atraso temporal (010H = 16)
+DELAY_ANIMACAO_COMPLEXA	EQU 00FH				; valor usado para implementar um atraso temporal (010H = 16)
 
 ; ####################################################################################################################
 ; # ZONA DE DADOS 
@@ -57,14 +57,12 @@ SP_inicial_prog_princ:	; este é o endereço com que o SP deste processo deve se
 ; -------------------------------------------------------------------------------------------------------------------
 ; # variáveis para guardar o estado do teclado
 ; -------------------------------------------------------------------------------------------------------------------
-linha_carregada:
-	WORD 0				; variável que indica se uma tecla foi carregada
-						; 0 - nenhuma tecla carregada
-						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
-coluna_carregada:
-	WORD 0				; variável que indica se uma tecla foi carregada
-						; 0 - nenhuma tecla carregada
-						; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
+tecla_carregada:
+	WORD 0				; -1, se nenhuma tecla carregada / 0 a 15 (0H a FH) - indica a tecla carregada
+
+tags_acoes_teclado:
+	WORD acao_tecla_0, acao_tecla_1, acao_tecla_2, acao_tecla_3, acao_tecla_4, acao_tecla_5, acao_tecla_6, acao_tecla_7
+	WORD acao_tecla_8, acao_tecla_9, acao_tecla_A, acao_tecla_B, acao_tecla_C, acao_tecla_D, acao_tecla_E, acao_tecla_F
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; # variáveis para guardar a dimensão e posição do objeto
@@ -301,7 +299,6 @@ neve2:					; tabela que define o objeto neve 2 (cor, largura, pixels)
 	PLACE   0								; o código tem de começar em 0000H
 inicio:
 	MOV  SP, SP_inicial_prog_princ			; inicializa SP do programa principal
-
   	MOV [APAGA_AVISO], R1					; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
   	MOV [APAGA_ECRA], R1					; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 0								; cenário de fundo número 0
@@ -318,6 +315,7 @@ ciclo:										; ciclo das rotinas cooperativas no programa principal
 		MOV R3, [animacao_neve]				; Carrega o estado da flag de animação da neve (0: desligado, 1: ligado)
 		CMP R3, 0							; Compara o estado com 0
 		JZ anima_luzes						; Se a flag de animação da neve for (0), salta para anima_luzes
+		; Argumentos para a animação da neve
 		MOV R0, contador_atraso_neve 		; Carrega o endereço da variável contador_atraso_neve
 		MOV R2, DELAY_ANIMACAO_SIMPLES		; Carrega o valor do atraso da animação de neve
 		MOV R3, info_neve_1					; Carrega o estado do ecrã de neve 1
@@ -328,6 +326,7 @@ ciclo:										; ciclo das rotinas cooperativas no programa principal
 		MOV R3, [animacao_luzes]			; Carrega o estado da flag de animação das luzes da árvore (0: desligado, 1: ligado)
 		CMP R3, 0							; Compara o estado com 0
 		JZ anima_merryxmas					; Se a flag de animação da árvore for (0), salta para fim_ciclo
+		; Argumentos para a animação das luzes da árvore
 		MOV R0, contador_atraso_arvore		; Carrega o endereço da variável contador_atraso_arvore
 		MOV R2, DELAY_ANIMACAO_SIMPLES		; Carrega o valor do atraso da animação da árvore
 		MOV R3, info_luz_1					; Carrega o estado do ecrã de luzes 1
@@ -656,70 +655,67 @@ fim_rotina_alterna_objetos:				; Restaura os registros salvos e retorna à rotin
 	RET
 	
 ; -------------------------------------------------------------------------------------------------------------------
-; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla em qualquer linha do teclado. 
-;			Não é bloqueante e retorna logo, haja ou não uma tecla carregada.
+; TECLADO - Rotina cooperativa que deteta quando se carrega numa tecla de um teclado de 16 teclas, guardando o valor 
+; 			da tecla carregada (0-15) na variável "tecla_carregada". Se nenhuma tecla for carregada, guarda o valor -1.
+; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
 teclado:
-	PUSH R0								; Salva o valor de R0 na pilha
-	PUSH R1								; Salva o valor de R1 na pilha
-	PUSH R2								; Salva o valor de R2 na pilha
-	PUSH R3								; Salva o valor de R3 na pilha
-	PUSH R5								; Salva o valor de R5 na pilha
+	PUSH R0                             ; Salva o valor dos registos na pilha
+	PUSH R1                             
+	PUSH R2                             
+	PUSH R3                             
+	PUSH R4                             
+	PUSH R5                             
 	
-	MOV  R2, TEC_LIN         			; endereço do periférico das linhas
-	MOV  R3, TEC_COL         			; endereço do periférico das colunas
-	MOV  R5, MASCARA		 			; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+	MOV  R2, TEC_LIN                    ; endereço do periférico das linhas
+	MOV  R3, TEC_COL                    ; endereço do periférico das colunas
+	MOV  R5, MASCARA                    ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+	MOV  R1, 1                          ; Inicializa R1 com o valor para a linha 1
 
-testa_linha_1:
-	MOV  R1, 1				 			; testar a linha 1
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
+testa_linha:
+	MOVB [R2], R1                       ; Escrever no periférico de saída (linha)
+	MOVB R0, [R3]                       ; Ler do periférico de entrada (colunas)
+	AND  R0, R5                         ; Isolar os 4 bits de menor peso (colunas)
+	CMP  R0, 0                          ; Há tecla premida?
+	JNZ  ha_tecla                       ; Se pressionada, salta para "ha_tecla" para processar
 
-testa_linha_2:
-	MOV  R1, 2				 			; testar a linha 2 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
+	SHL  R1, 1                          ; Se não, desloca a linha para a próxima (1, 2, 4, 8)
+	MOV  R4, 16						    ; Prepara o valor 16 para a comparação
+	CMP  R1, R4                         ; Já testou todas as linhas? (Se sim, R1 = 16)
+	JNZ  testa_linha                    ; Se não, testa a próxima linha
+	JMP  nao_ha_tecla                 	; Se todas as linhas foram testadas e nenhuma tecla foi detetada, guarda o valor de -1
 
-testa_linha_3:
-	MOV  R1, 4				 			; testar a linha 3 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
+ha_tecla:								; Tag deixada aqui apenas para facilitar a leitura do código e deixar mais explícito
+linha_para_indice:
+    SHR  R1, 1                          ; O objetivo é converter linha (1, 2, 4, 8) para (0, 1, 2, 3) -> mas o SHR converte 8 para 4, por isso deve ser corrigido a seguir
+	CMP  R1, 4							; Verifica se a linha é 4
+	JNZ coluna_para_indice				; Se a linha for diferente de 4 (0,1,2), salta para "define_tecla"
+	MOV  R1, 3                          ; Se a linha for 4, converte para 3
 
-testa_linha_4:
-	MOV  R1, 8				 			; testar a linha 4 
-	MOVB [R2], R1            			; escrever no periférico de saída (linhas)
-	MOVB R0, [R3]            			; ler do periférico de entrada (colunas)
-	AND  R0, R5				 			; elimina bits para além dos bits 0-3
-	CMP  R0, 0               			; há tecla premida?
-	JNZ  ha_tecla						; Se pressionada, salta para "ha_tecla" para guardar a tecla premida nas variaveis linha_carregada e coluna_carregada
+coluna_para_indice:
+    SHR  R0, 1                          ; Converte coluna (1, 2, 4, 8) para (0, 1, 2, 3) -> mas o SHR converte 8 para 4, por isso deve ser corrigido a seguir
+	CMP  R0, 4							; Verifica se a coluna é 4
+	JNZ define_tecla					; Se a coluna for diferente de 4, salta para "define_tecla"
+	MOV  R0, 3                          ; Se a coluna for 4, converte para 3
+
+define_tecla:
+    SHL  R1, 2                          ; Multiplica a linha por 4 (desloca 2 bits para a esquerda)
+    ADD  R0, R1                         ; Calculando o valor da tecla (0 a 15): linha * 4 + coluna
+    MOV  [tecla_carregada], R0          ; Armazena o valor da tecla pressionada (0 a 15)
+    JMP  sai_teclado                    ; Sai da rotina
 
 nao_ha_tecla:
-	MOV  R1, 0				 			; nenhuma tecla premida na linha 4 - será guardada na variável linha_carregada
-	MOV  R2, 0               			; nenhuma tecla premida na coluna - será guardada na variável coluna_carregada
-	JMP sai_teclado
-
-ha_tecla:
-	MOV  R2, R0              			; houve uma tecla premida
+	MOV R0, -1							; Se nenhuma tecla foi pressionada, guarda o valor de -1
+	MOV [tecla_carregada], R0			; Armazena o valor da tecla pressionada (-1)
 
 sai_teclado:
-	MOV [linha_carregada], R1			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma linha premida, 1, 2, 4, 8)
-	MOV [coluna_carregada], R2			; atualiza na variável a informação sobre se houve ou não tecla premida (0 - nenhuma coluna premida, 1, 2, 4, 8)
-										; O uso de R2 é redundante (bastava guardar R0), mas assim é mais explícito
-	POP R5
-    POP R3
-    POP R2
-    POP R1
-    POP R0
-    RET                      			; retorna sempre, haja ou não uma tecla carregada
+	POP  R5
+	POP  R4
+    POP  R3
+    POP  R2
+    POP  R1
+    POP  R0
+    RET                                ; Retorna sempre, haja ou não uma tecla carregada
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; ACOES_TECLADO - Rotina que deteta qual tecla do teclado foi carregada e executa uma ação correspondente, podendo ativar
@@ -727,117 +723,83 @@ sai_teclado:
 ; Argumentos: Nenhum
 ; -------------------------------------------------------------------------------------------------------------------
 acoes_teclado:
-	PUSH R0								; Salva o valor de R0 na pilha
-	PUSH R1								; Salva o valor de R1 na pilha
-	PUSH R2								; Salva o valor de R2 na pilha
-	PUSH R3 							; Salva o valor de R3 na pilha
-	PUSH R4 							; Salva o valor de R4 na pilha
+	PUSH R0								; Salva o valor dos registos na stack
+	PUSH R1								
+	PUSH R2								
+	PUSH R3 							
+	PUSH R4 							
 
-	MOV R0, [linha_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a linha da tecla) 
-	MOV R1, [coluna_carregada]			; obtém o valor da variável que guarda a tecla carregada (0 - nenhuma tecla carregada; 1, 2, 4 ou 8 - tecla carregada, e o valor indica a coluna da tecla) 
-	CMP R0, 0							; Verifica se nenhuma tecla foi carregada (linha = 0)
+	MOV R0, [tecla_carregada]			; obtém o valor da variável que guarda a tecla carregada (-1: nenhuma tecla carregada; 0 - 15: id da tecla carregada) 
+	CMP R0, -1							; Verifica se nenhuma tecla foi carregada
 	JZ sai_rotina_teclado				; Sai da rotina se nenhuma tecla foi pressionada
 
-verifica_linha_1:
-	CMP R0, 1							; Verifica se a linha carregada é a linha 1
-	JNZ verifica_linha_2				; Se não for, vai para a verificação da linha 2
-	
+verifica_tecla:
+    ADD R0, R0              			; R0 = R0 + R0 = R0 * 2 (multiplicação por 2)
+    MOV R2, tags_acoes_teclado  		; Carrega o endereço base da tabela que contém o nome das tags das ações do teclado em R2
+    ADD R2, R0              			; Soma o deslocamento (R0) ao endereço base
+    MOV R2, [R2]            			; Acessa a tabela usando o endereço calculado
+    JMP R2                  			; Salta para a ação correspondente
+
+acao_tecla_0: 							; Mostra ou oculta o objeto giftbox consonte o estado atual (exibido/ocultado) e reproduz o efeito sonoro associado
 	MOV R3, info_giftbox				; Prepara o endereço da variável que guarda as informações do objeto giftbox (número do ecrã, estado do objeto, som associado)
-	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ ativa_interruptor_objeto			; Faz a animação do giftbox
-	
-	MOV R3, info_painatal				; Prepara o endereço da variável que guarda as informações do objeto pai natal (número do ecrã, estado do objeto, som associado)
-	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ ativa_interruptor_objeto			; Faz a animação do pai natal
-	
-	MOV R3, info_arvore					; Prepara o endereço da variável que guarda as informações do objeto árvore de natal (número do ecrã, estado do objeto, som associado)
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
-	JZ ativa_interruptor_objeto			; Faz a animação da arvore
-	
-	MOV R3, info_merryxmas				; Prepara o endereço da variável que guarda as informações do objeto merry xmas (número do ecrã, estado do objeto, som associado)
-	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
-	JZ ativa_interruptor_objeto			; Faz a animação do merryxmas
-
-verifica_linha_2:
-	CMP R0, 2							; Verifica se a linha carregada é a linha 2
-	JNZ verifica_linha_3				; Se não for, vai para a verificação da linha 3
-	
-	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ para_som							; Para todos os sons
-	
-	MOV R3, 0							; Prepara o identificador de som 0 para o reproduzir caso a tecla premida seja a coluna 2
-	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ reproduzir_som					; Reproduz o 1º som
-
-	MOV R3, 1							; Prepara o identificador de som 1 para o reproduzir caso a tecla premida seja a coluna 3
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
-	JZ reproduzir_som					; Reproduz o 2º som
-	
-	MOV R3, 2							; Prepara o identificador de som 2 para o reproduzir caso a tecla premida seja a coluna 4
-	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
-	JZ reproduzir_som					; Reproduz o 3º som 
-
-verifica_linha_3:
-	CMP R0, 4							; Verifica se a linha carregada é a linha 3
-	JNZ verifica_linha_4				; Se não for, vai para a verificação da linha 4
-	
-	MOV R3, 0							; Prepara o identificador da imagem 0 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 1
-	CMP R1, 1							; Verifica se a coluna carregada é a coluna 1
-	JZ seleciona_imagem_bg				; Seleciona a 1º imagem de fundo 
-	
-	MOV R3, 1							; Prepara o identificador da imagem 1 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 2
-	CMP R1, 2							; Verifica se a coluna carregada é a coluna 2
-	JZ seleciona_imagem_bg				; Seleciona a 2º imagem de fundo 
-	
-	MOV R3, 2							; Prepara o identificador da imagem 2 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 3
-	CMP R1, 4							; Verifica se a coluna carregada é a coluna 3
-	JZ seleciona_imagem_bg				; Seleciona a 3º imagem de fundo 
-	
-	MOV R3, 3							; Prepara o identificador da imagem 3 para ser definida como imagem de fundo, caso a tecla premida seja a coluna 4
-	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; Verifica se a coluna carregada é a coluna 4
-	JZ seleciona_imagem_bg				; Seleciona a 4º imagem de fundo 
-
-verifica_linha_4:
-	MOV R2, 8							; aqui usa-se R2 para guardar o valor 8 (linha 4) porque não é possível fazer o CMP com k = 8
-	CMP R0, R2							; verifica se nenhuma tecla foi premida na linha 4
-	JNZ sai_rotina_teclado				; Se não for, sai da rotina
-	
-	CMP R1, 1							; verifica se tecla premida é C
-	JZ ativa_animacoes_simples			; ativa as animações simples (neve e luzes)
-	
-	CMP R1, 2							; verifica se tecla premida é D
-	JZ desativa_animacoes_simples		; desativa as animações simples (neve e luzes)
-	
-	CMP R1, 4							; verifica se tecla premida é E
-	JZ liga_animacao_merryxmas			; liga animação complexa que move o letreiro merry xmas
-	
-	MOV R2, 8							; Prepara o valor 8 para comparação
-	CMP R1, R2							; verifica se tecla premida é F
-	JZ desliga_animacao_merryxmas		; desliga animação complexa que move o letreiro merry xmas
-
-; Ações a executar conforme tecla pressionada
-ativa_interruptor_objeto:
 	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
 	JMP sai_rotina_teclado
 
-para_som:
+acao_tecla_1: 							; Mostra ou oculta o objeto pai natal consonte o estado atual (exibido/ocultado) e reproduz o efeito sonoro associado
+	MOV R3, info_painatal				; Prepara o endereço da variável que guarda as informações do objeto giftbox (número do ecrã, estado do objeto, som associado)
+	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
+	JMP sai_rotina_teclado
+
+acao_tecla_2:							; Mostra ou oculta o objeto arvore consonte o estado atual (exibido/ocultado) e reproduz o efeito sonoro associado
+	MOV R3, info_arvore					; Prepara o endereço da variável que guarda as informações do objeto giftbox (número do ecrã, estado do objeto, som associado)
+	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
+	JMP sai_rotina_teclado
+
+acao_tecla_3:							; Mostra ou oculta o objeto merryxmas consonte o estado atual (exibido/ocultado) e reproduz o efeito sonoro associado
+	MOV R3, info_merryxmas				; Prepara o endereço da variável que guarda as informações do objeto giftbox (número do ecrã, estado do objeto, som associado)
+	CALL interruptor_objeto				; Chama a rotina que mostra ou oculta o objeto e reproduz o efeito sonoro associado
+	JMP sai_rotina_teclado
+
+acao_tecla_4:							; Para todos os sons
 	MOV [PARA_TODOS_SONS], R3			; Comando para parar todos os sons - o valor de R1 é irrelevante
 	JMP sai_rotina_teclado				; Sai da rotina
 
-reproduzir_som:
-	;MOV [PARA_TODOS_SONS], R3			; Comando para parar todos os sons - o valor de R1 é irrelevante. NÃO FUNCIONA!
-										; Por isso, para reproduzir um som, o ideal é parar todos os sons primeiro através da tecla 5 (linha 2, coluna 1)
+acao_tecla_5:							; Reproduz o som 0 em loop
+	MOV R3, 0							; Prepara o identificador de som 0 para o reproduzir
 	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
 	JMP sai_rotina_teclado				; Sai da rotina
 
-seleciona_imagem_bg:					
+acao_tecla_6:							; Reproduz o som 1 em loop
+	MOV R3, 1							; Prepara o identificador de som 0 para o reproduzir
+	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
+	JMP sai_rotina_teclado				; Sai da rotina
+
+acao_tecla_7:							; Reproduz o som 2 em loop
+	MOV R3, 2							; Prepara o identificador de som 0 para o reproduzir
+	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
+	JMP sai_rotina_teclado				; Sai da rotina
+
+acao_tecla_8:							; Define a imagem 0 como imagem de fundo
+	MOV R3, 0							; Prepara o identificador da imagem 0 para ser definida como imagem de fundo
 	MOV [SELECIONA_BG], R3				; Atualiza a seleção de imagem de fundo
 	JMP sai_rotina_teclado				; Sai da rotina
 
-ativa_animacoes_simples:
+acao_tecla_9:							; Define a imagem 1 como imagem de fundo
+	MOV R3, 1							; Prepara o identificador da imagem 1 para ser definida como imagem de fundo
+	MOV [SELECIONA_BG], R3				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+acao_tecla_A:							; Define a imagem 2 como imagem de fundo
+	MOV R3, 2							; Prepara o identificador da imagem 2 para ser definida como imagem de fundo
+	MOV [SELECIONA_BG], R3				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+acao_tecla_B:							; Define a imagem 3 como imagem de fundo
+	MOV R3, 3							; Prepara o identificador da imagem 3 para ser definida como imagem de fundo
+	MOV [SELECIONA_BG], R3				; Atualiza a seleção de imagem de fundo
+	JMP sai_rotina_teclado				; Sai da rotina
+
+acao_tecla_C:							; Ativa as animações simples (neve e luzes)
 	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
 	CALL ativa_animacao_simples			; Ativa a animação da neve
 	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
@@ -846,24 +808,24 @@ ativa_animacoes_simples:
 	MOV [INICIA_SOM], R3				; Comando para iniciar a reprodução do som especificado em loop
 	JMP sai_rotina_teclado				; Sai da rotina
 
-desativa_animacoes_simples:
+acao_tecla_D:							; Desativa as animações simples (neve e luzes)
 	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
 	CALL desativa_animacao_simples		; Ativa a animação da neve
 	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados)
 	CALL desativa_animacao_simples		; Ativa a animação das luzes
 	JMP sai_rotina_teclado				; Sai da rotina
 
-liga_animacao_merryxmas:
+acao_tecla_E:							; Ativa a animação complexa do merryxmas
 	MOV R3, animacao_neve 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados na animação da neve
 	CALL desativa_animacao_simples		; Desativa a animação da neve para melhor fluidez da animação complexa
 	MOV R3, animacao_luzes 				; Prepara o endereço da variável que indica estado da animação e ecrãs utilizados na animação das luzes
 	CALL desativa_animacao_simples		; Desativa a animação das luzes para melhor fluidez da animação complexa
 	MOV R3, 1							; Define a flag de animação do merryxmas como ativa
 	MOV [animacao_merryxmas], R3		; Guarda o valor da flag (1) na variável que determina a execução da animação do merryxmas
-	JMP sai_rotina_teclado
+	JMP sai_rotina_teclado				; Sai da rotina
 
-desliga_animacao_merryxmas:
-	; Desativa a animação do merryxmas
+acao_tecla_F:							; Desativa a animação complexa do merryxmas
+	; Desativa a animação atualizando o valor da flag na primeira palavra da variável animacao_merryxmas
 	MOV R0, animacao_merryxmas			; obtém o endereço da variável que guarda as informações da animação do merryxmas
 	MOV R1, 0							; Guarda o valor 0 em R1
 	MOV [R0], R1						; Guarda o valor da flag (0) na variável que determina a execução da animação do merryxmas
@@ -887,9 +849,9 @@ desliga_animacao_merryxmas:
 	MOV R4, merry_xmas					; Prepara o endereço da tabela que define o objeto merryxmas
 	CALL desenha_objeto					; Desenha o objeto merryxmas na posição inicial
 
-	JMP sai_rotina_teclado
+	JMP sai_rotina_teclado				; Sai da rotina
 
-sai_rotina_teclado:						; Restaura os valores dos registradores
+sai_rotina_teclado:						; Restaura os valores dos registadores
 	POP  R4
 	POP  R3
 	POP  R2
